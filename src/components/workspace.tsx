@@ -2182,6 +2182,7 @@ export default function Workspace() {
                   >
                     <option>Active</option>
                     <option>Inactive</option>
+                    <option>Pending</option>
                   </select>
                 </Field>
                 <Field label="Owner" full>

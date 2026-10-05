@@ -31,7 +31,7 @@ export const leadSchema = z
     source: z.string().max(200).default(""),
     score: z.number().min(0).max(100).nullable().default(null),
     stage: z.enum(STAGES),
-    status: z.enum(["Active", "Inactive"]).default("Active"),
+    status: z.enum(["Active", "Inactive", "Pending"]).default("Active"),
     value: z.number().min(0).max(1e12).default(0),
     priority: z.enum(["High", "Medium", "Low"]).default("Medium"),
     notes: z.string().max(10000).default(""),
@@ -40,7 +40,13 @@ export const leadSchema = z
     next_follow_up: date.nullable().default(null),
     loss_reason: z.string().max(500).default(""),
     work_status: z.enum(WORK_STATUSES).default("None"),
-    time_zone: z.string().refine(v => v === "" || ZONES.some(([z]) => z === v), "Choose a supported timezone").default(""),
+    time_zone: z
+      .string()
+      .refine(
+        (v) => v === "" || ZONES.some(([z]) => z === v),
+        "Choose a supported timezone",
+      )
+      .default(""),
   })
   .refine((v) => v.stage !== "Lost" || !!v.loss_reason.trim(), {
     message: "Add a loss reason",

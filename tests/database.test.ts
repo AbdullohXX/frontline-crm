@@ -18,6 +18,12 @@ test("Database RLS, atomic audit, stale versions, reassignment, activity and imp
       "utf8",
     ),
   );
+  await db.exec(
+    readFileSync(
+      "supabase/migrations/20261005155849_pending_lead_status.sql",
+      "utf8",
+    ),
+  );
   await db.query(
     `insert into auth.users values ($1,'owner@frontline-x.com',now(),' {"provider":"google"}'),($2,'agent@frontline-x.com',now(),'{"provider":"google"}'),($3,'outsider@frontline-x.com',now(),'{"provider":"google"}')`,
     [owner, agent, outsider],
@@ -43,7 +49,7 @@ test("Database RLS, atomic audit, stale versions, reassignment, activity and imp
     email: "a@example.test",
     phone: "+14155550123",
     stage: "New",
-    status: "Active",
+    status: "Pending",
     priority: "High",
     owner_email: "owner@frontline-x.com",
     value: 1000,
@@ -54,6 +60,7 @@ test("Database RLS, atomic audit, stale versions, reassignment, activity and imp
   await identity(owner);
   let first = await rpc("save_lead", input);
   assert.equal(first.score, 0);
+  assert.equal(first.status, "Pending");
   assert.equal(
     (await db.query("select * from public.activities")).rows.length,
     1,

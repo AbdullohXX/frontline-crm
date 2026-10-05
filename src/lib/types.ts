@@ -39,7 +39,7 @@ export type Lead = {
   source: string;
   score: number | null;
   stage: (typeof STAGES)[number];
-  status: "Active" | "Inactive";
+  status: "Active" | "Inactive" | "Pending";
   value: number;
   priority: "High" | "Medium" | "Low";
   notes: string;

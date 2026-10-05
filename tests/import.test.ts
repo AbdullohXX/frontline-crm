@@ -61,3 +61,12 @@ test("Unknown owners and duplicate IDs block import; dates do not silently norma
     }),
   );
 });
+
+test('Legacy recovery keeps Pending and preserves spreadsheet errors and labelled phones in notes',()=>{
+ const p=previewCsv('id,company,phone,status,owner_email,original_created_date\n1,One,#ERROR!,Pending,agent@frontline-x.com,Contact person instead of date\n2,Two,Texas +1 210-883-5598,Active,agent@frontline-x.com,2026-10-01',members,'','source');
+ assert.equal(p.errors.length,0);assert.equal(p.rows[0].status,'Pending');assert.equal(p.rows[0].phone,'');assert.equal(p.rows[0].original_created_date,null);assert.match(p.rows[0].notes,/#ERROR!/);assert.match(p.rows[0].notes,/Contact person/);assert.equal(p.rows[1].phone,'+12108835598');assert.match(p.rows[1].notes,/Texas/);assert.equal(p.warnings.length,3);
+});
+test('Shifted records and ambiguous multiple phone numbers remain blocked',()=>{
+ assert.match(previewCsv('id,company,email,phone,score,owner_email\n1,One,US,Outbound,California +1 951-283-1973,agent@frontline-x.com',members,'','source').errors[0],/Columns appear shifted/);
+ assert.equal(previewCsv('id,company,phone,owner_email\n1,One,+12108835598 or +15107155020,agent@frontline-x.com',members,'','source').errors.length,1);
+});

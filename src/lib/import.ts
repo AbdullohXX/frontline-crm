@@ -1,5 +1,5 @@
 import Papa from "papaparse";
-import { leadSchema, date } from "./validation";
+import { leadSchema, date, message } from "./validation";
 import { STAGES, type Member } from "./types";
 import { workStatusFromLegacy } from "./workflow";
 export type ImportRow = ReturnType<typeof leadSchema.parse> & {
@@ -164,6 +164,69 @@ export function previewCsv(
         row.loss_reason = clean(values[21]);
         row.original_creator = clean(values[18]);
       }
+      if (
+        row.email &&
+        !row.email.includes("@") &&
+        row.score &&
+        !Number.isFinite(Number(row.score))
+      )
+        throw new Error(
+          "Columns appear shifted. Review email, phone, score, follow-up, priority and created-date cells before importing.",
+        );
+      const preserve = (field: string, raw: string, note: string) => {
+        row.notes = [row.notes, "[Import: original " + field + "] " + raw]
+          .filter(Boolean)
+          .join("\n");
+        out.warnings.push(
+          "Row " +
+            rowNumber +
+            ": " +
+            note +
+            "; original value retained in notes.",
+        );
+      };
+      if (
+        [
+          "#ERROR!",
+          "#REF!",
+          "#N/A",
+          "#VALUE!",
+          "#DIV/0!",
+          "#NAME?",
+          "#NUM!",
+          "#NULL!",
+        ].includes((row.phone || "").toUpperCase())
+      ) {
+        preserve(
+          "phone",
+          row.phone,
+          "Spreadsheet error is not a callable phone number",
+        );
+        row.phone = "";
+      } else if (row.phone && !/^\+?[\d\s().-]+$/.test(row.phone)) {
+        const labelled = row.phone.match(/^[A-Za-z ]+\s+(\+?[\d\s().-]+)\\?$/);
+        if (
+          labelled &&
+          labelled[1].replace(/\D/g, "").length >= 7 &&
+          labelled[1].replace(/\D/g, "").length <= 15
+        ) {
+          preserve("phone", row.phone, "Removed location label from phone");
+          row.phone = labelled[1].replace(/[\s().-]/g, "");
+        }
+      }
+      if (
+        row.original_created_date &&
+        !/^\d{4}-\d{2}-\d{2}(?:$|T| )/.test(row.original_created_date) &&
+        !/^\d{1,2}[/.]\d{1,2}[/.]\d{4}$/.test(row.original_created_date) &&
+        /[A-Za-z]/.test(row.original_created_date)
+      ) {
+        preserve(
+          "created date",
+          row.original_created_date,
+          "Created-date cell contains text; date left unknown",
+        );
+        row.original_created_date = "";
+      }
       const owner =
         members.find(
           (m) =>
@@ -237,9 +300,7 @@ export function previewCsv(
         original_creator: row.original_creator || "",
       });
     } catch (e) {
-      out.errors.push(
-        `Row ${rowNumber}: ${e instanceof Error ? e.message : "Invalid values"}`,
-      );
+      out.errors.push(`Row ${rowNumber}: ${message(e)}`);
     }
   });
   return out;
