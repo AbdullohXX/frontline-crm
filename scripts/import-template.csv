@@ -1,0 +1,2 @@
+id,company,contact,job_title,email,phone,country,industry,source,score,stage,status,next_follow_up,value,priority,notes,owner_email,original_created_date,next_action,loss_reason
+example-1,Example Company,Example Contact,Director,contact@example.test,+14155550123,United States,Services,Referral,75,New,Active,2026-10-10,1000,Medium,Replace this example before importing,info@frontline-x.com,2026-10-01,Call to discuss requirements,
