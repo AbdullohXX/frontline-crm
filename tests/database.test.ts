@@ -307,6 +307,72 @@ test("Database RLS, atomic audit, stale versions, reassignment, activity and imp
     (await rpc("crm_list_leads", { owner: "owner@frontline-x.com" })).total,
     0,
   );
+  // Shared access upgrade: cross-owner work is allowed, reassignment/admin access is not.
+  await db.exec("reset role");
+  await db.exec(
+    readFileSync(
+      "supabase/migrations/20261006205049_shared_team_lead_access.sql",
+      "utf8",
+    ),
+  );
+  await identity(agent);
+  assert.equal((await db.query("select * from public.leads")).rows.length, 3);
+  assert.equal(
+    (await rpc("crm_list_leads", { owner: "owner@frontline-x.com" })).total,
+    2,
+  );
+  assert.equal((await rpc("crm_list_leads", { scope: "mine" })).total, 1);
+  assert.equal(
+    (await db.query("select * from public.admin_audit")).rows.length,
+    0,
+  );
+  let shared = await rpc("save_lead", {
+    ...restored,
+    notes: "Collaborative edit",
+  });
+  assert.equal(shared.owner_email, "owner@frontline-x.com");
+  assert.equal(shared.notes, "Collaborative edit");
+  await assert.rejects(
+    () => rpc("save_lead", { ...shared, owner_email: "agent@frontline-x.com" }),
+    /ACCESS/,
+  );
+  shared = (
+    await rpc("change_leads", {
+      action: "stage",
+      stage: "Proposal",
+      items: [{ id: shared.id, version: shared.version }],
+    })
+  )[0];
+  shared = await rpc("record_activity", {
+    id: shared.id,
+    version: shared.version,
+    type: "Note",
+    outcome: "Other",
+    details: "Shared follow-up",
+  });
+  assert.equal(shared.owner_email, "owner@frontline-x.com");
+  assert.equal(
+    (
+      await db.query("select * from public.activities where lead_id=$1", [
+        shared.id,
+      ])
+    ).rows.length > 0,
+    true,
+  );
+  await assert.rejects(
+    () =>
+      rpc("save_member", {
+        email: "outsider@frontline-x.com",
+        display_name: "X",
+        role: "Admin",
+        active: true,
+      }),
+    /ACCESS/,
+  );
+  await assert.rejects(() => rpc("import_leads", []), /ACCESS/);
+  await identity(outsider);
+  assert.equal((await db.query("select * from public.leads")).rows.length, 0);
+  await assert.rejects(() => rpc("save_lead", { ...shared }), /ACCESS/);
   await identity(owner);
   await rpc("save_member", {
     email: "agent@frontline-x.com",

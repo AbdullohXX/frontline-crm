@@ -238,7 +238,7 @@ export default function Workspace() {
     [toast, setToast] = useState("");
   const [search, setSearch] = useState(""),
     [query, setQuery] = useState(""),
-    [scope, setScope] = useState("mine"),
+    [scope, setScope] = useState("all"),
     [due, setDue] = useState("due"),
     [stage, setStage] = useState(""),
     [page, setPage] = useState(0),
@@ -1878,8 +1878,10 @@ export default function Workspace() {
               <section className="panel settings-panel">
                 <h3>Team access</h3>
                 <p>
-                  Only approved frontline-x.com Google accounts can enter.
-                  Agents access their own leads; admins access all leads.
+                  Only approved frontline-x.com Google accounts can enter. Every
+                  active team member can view and work on all leads. Owners
+                  track responsibility; only admins manage team access and
+                  reassign leads.
                 </p>
                 <div className="team-list">
                   {boot.members.map((m) => (
