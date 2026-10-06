@@ -1430,4 +1430,556 @@ tbody tr:hover {
     gap: 12px;
   }
 }
-.workflow-filters{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0 22px;align-items:end}.workflow-filters label{flex:1 1 170px;display:grid;gap:7px}.workflow-filters label span{color:var(--muted);font-size:12px}.workflow-filters .fine{flex-basis:100%;margin:0}.company-strip{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;color:var(--muted);font-size:12px;margin:0 0 18px}.company-strip a{color:inherit}.bulk-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:15px 20px;border-bottom:1px solid var(--border)}.bulk-controls select{width:auto;max-width:220px}.bulk-controls input:not([type=checkbox]){width:240px}.bulk-controls label{display:flex;align-items:center;gap:8px}.bulk-controls input[type=checkbox],td input[type=checkbox]{width:16px;height:16px;accent-color:#a779ff}.row-shortcuts{display:flex;flex-wrap:wrap;gap:8px;min-width:150px}.row-shortcuts button,.row-shortcuts a{font-size:12px;padding:6px 9px;border:1px solid var(--border);border-radius:7px;text-decoration:none}.calling-open{color:#60d1b8!important}.drop-target{outline:2px dashed #b38aff;outline-offset:-3px;background:#191126!important}.deal-card[aria-busy=true]{border-color:#a779ff;opacity:.8}.refresh-indicator{color:var(--muted);font-size:12px;margin-bottom:12px}.reconciliation{margin-bottom:24px}.panel-content{padding:20px;display:grid;gap:15px}.panel-content .error{white-space:pre-wrap}.panel-content button{justify-self:start}@media(max-width:700px){.workflow-filters label{flex-basis:140px}.bulk-controls select{max-width:100%;width:100%}.bulk-controls{padding:12px}.company-strip{line-height:1.6}}
+.workflow-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 12px 0 22px;
+  align-items: end;
+}
+.workflow-filters label {
+  flex: 1 1 170px;
+  display: grid;
+  gap: 7px;
+}
+.workflow-filters label span {
+  color: var(--muted);
+  font-size: 12px;
+}
+.workflow-filters .fine {
+  flex-basis: 100%;
+  margin: 0;
+}
+.company-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  margin: 0 0 18px;
+}
+.company-strip a {
+  color: inherit;
+}
+.bulk-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.bulk-controls select {
+  width: auto;
+  max-width: 220px;
+}
+.bulk-controls input:not([type="checkbox"]) {
+  width: 240px;
+}
+.bulk-controls label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bulk-controls input[type="checkbox"],
+td input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #a779ff;
+}
+.row-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 150px;
+}
+.row-shortcuts button,
+.row-shortcuts a {
+  font-size: 12px;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  text-decoration: none;
+}
+.calling-open {
+  color: #60d1b8 !important;
+}
+.drop-target {
+  outline: 2px dashed #b38aff;
+  outline-offset: -3px;
+  background: #191126 !important;
+}
+.deal-card[aria-busy="true"] {
+  border-color: #a779ff;
+  opacity: 0.8;
+}
+.refresh-indicator {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+.reconciliation {
+  margin-bottom: 24px;
+}
+.panel-content {
+  padding: 20px;
+  display: grid;
+  gap: 15px;
+}
+.panel-content .error {
+  white-space: pre-wrap;
+}
+.panel-content button {
+  justify-self: start;
+}
+@media (max-width: 700px) {
+  .workflow-filters label {
+    flex-basis: 140px;
+  }
+  .bulk-controls select {
+    max-width: 100%;
+    width: 100%;
+  }
+  .bulk-controls {
+    padding: 12px;
+  }
+  .company-strip {
+    line-height: 1.6;
+  }
+}
+
+/* Frontline workspace: compact navigation, contextual controls and clear record hierarchy. */
+.app .page-head {
+  margin-bottom: 20px;
+  align-items: center;
+}
+.app .page-head h1 {
+  font-size: 28px;
+  letter-spacing: -0.8px;
+}
+.app .page-head .eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  margin-bottom: 7px;
+}
+.app .page-head p {
+  margin-top: 7px;
+  line-height: 1.4;
+}
+.app .company-strip {
+  font-size: 11px;
+  margin-bottom: 16px;
+  color: #878792;
+}
+.app .metrics {
+  gap: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 22px;
+}
+.app .metric {
+  border: 0;
+  border-radius: 0;
+  background: #121216;
+  padding: 15px 20px;
+  gap: 7px;
+}
+.app .metric + .metric {
+  border-left: 1px solid var(--border);
+}
+.app .metric strong {
+  font-size: 25px;
+  letter-spacing: -0.7px;
+}
+.app .metric .eyebrow {
+  font-size: 10px;
+}
+.app .sidebar {
+  background: #101014;
+}
+.app .sidebar nav button {
+  border-radius: 7px;
+}
+.app .sidebar nav button.active {
+  background: #251d36;
+  color: #ede6ff;
+  box-shadow: inset 2px 0 #b39aff;
+}
+.app .topbar {
+  background: #0d0d11;
+  border-bottom-color: #24242b;
+}
+.app .panel {
+  border-radius: 10px;
+}
+.app .panel-head {
+  padding: 15px 18px;
+}
+.view-tools {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.quick-views,
+.density-controls {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.quick-views button,
+.density-controls button {
+  padding: 7px 10px;
+  background: transparent;
+  border-color: transparent;
+  color: #a1a1ad;
+}
+.quick-views button[aria-pressed="true"] {
+  background: #272033;
+  color: #eadfff;
+  border-color: #49375f;
+}
+.density-controls {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+}
+.density-controls button {
+  font-size: 11px;
+  padding: 5px 8px;
+}
+.density-controls button[aria-pressed="true"] {
+  background: #292932;
+  color: #fafafa;
+}
+.filter-disclosure {
+  margin: 0 0 18px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: #111115;
+}
+.filter-disclosure summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 11px 14px;
+  font-size: 12px;
+  color: #b8b8c4;
+  list-style: none;
+}
+.filter-disclosure summary::-webkit-details-marker {
+  display: none;
+}
+.filter-disclosure summary::after {
+  content: "+";
+  margin-left: auto;
+  font-size: 17px;
+  color: #aba2bb;
+}
+.filter-disclosure[open] summary::after {
+  content: "−";
+}
+.filter-disclosure summary span:not(:empty) {
+  background: #3a2850;
+  color: #e7d5ff;
+  padding: 2px 7px;
+  border-radius: 12px;
+  font-size: 10px;
+}
+.filter-disclosure .workflow-filters {
+  margin: 0;
+  padding: 2px 14px 14px;
+  gap: 12px;
+}
+.app .filters {
+  margin-bottom: 12px;
+}
+.app .bulk-controls {
+  padding: 11px 18px;
+}
+.bulk-controls[data-selected="0"] > select,
+.bulk-controls[data-selected="0"] > button,
+.bulk-controls[data-selected="0"] > input {
+  display: none;
+}
+.app table thead th {
+  background: #18181e;
+  color: #a9a9b7;
+  white-space: nowrap;
+}
+.app table tbody tr:hover {
+  background: #1b1922;
+}
+.app table td {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+.app .table-wrap {
+  scrollbar-color: #45414e transparent;
+}
+.app[data-density="compact"] table td {
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+.app[data-density="compact"] table td .fine {
+  margin-top: 3px;
+}
+.app[data-density="compact"] .deal-card {
+  padding: 12px;
+  margin-bottom: 8px;
+}
+.app .board {
+  gap: 12px;
+}
+.app .lane {
+  background: #101014;
+  border-color: #24242d;
+  padding: 10px;
+  flex-basis: 270px;
+  border-top: 3px solid var(--stage-color, #a1a1af);
+}
+.lane[data-stage="Contacted"] {
+  --stage-color: #90a8eb;
+}
+.lane[data-stage="Qualified"] {
+  --stage-color: #a68be7;
+}
+.lane[data-stage="Meeting Booked"] {
+  --stage-color: #c997e3;
+}
+.lane[data-stage="Proposal"] {
+  --stage-color: #e3b583;
+}
+.lane[data-stage="Negotiation"] {
+  --stage-color: #e4cb84;
+}
+.lane[data-stage="Nurture"] {
+  --stage-color: #86bbc1;
+}
+.lane[data-stage="Won"] {
+  --stage-color: #7bc4a6;
+}
+.lane[data-stage="Lost"] {
+  --stage-color: #de8e98;
+}
+.app .lane-head {
+  padding: 6px 5px 15px;
+}
+.app .lane-head h3 {
+  font-size: 13px;
+}
+.app .lane-head h3 span {
+  background: #28242f;
+  border-radius: 5px;
+  padding: 2px 6px;
+  color: #bdb6ca;
+}
+.app .lane-head p {
+  font-size: 11px;
+  margin-top: 6px;
+}
+.app .deal-card {
+  background: #1a1a21;
+  border-color: #303039;
+  border-radius: 8px;
+  transition:
+    border-color 0.12s,
+    box-shadow 0.12s;
+}
+.app .deal-card:hover {
+  border-color: #655279;
+  box-shadow: 0 3px 10px #0003;
+}
+.app .deal-card > .text-button {
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.app .deal-card p {
+  margin: 6px 0 10px;
+  font-size: 11px;
+}
+.card-owner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #b5b5c2;
+  margin-bottom: 9px;
+}
+.owner-dot {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 8px;
+  background: #33273e;
+  color: #dfcef2;
+}
+.card-next {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #9d9daa;
+  border-top: 1px solid #303039;
+  padding-top: 9px;
+  margin: 10px 0;
+}
+.card-overdue {
+  color: #efa8ac;
+}
+.app .deal-card b {
+  font-size: 13px;
+}
+.app .deal-card select {
+  background: #15151a;
+  border-color: #32323c;
+  font-size: 11px;
+}
+.app .drawer {
+  width: 700px;
+  background: #131317;
+  box-shadow: -14px 0 50px #0004;
+}
+.app .drawer::backdrop {
+  background: #05050880;
+  backdrop-filter: blur(2px);
+}
+.app .drawer-head {
+  padding: 18px 24px;
+  background: #18181d;
+}
+.app .drawer-head h2 {
+  font-size: 24px;
+  margin-top: 12px;
+}
+.app .drawer-tabs {
+  gap: 5px;
+  margin-top: 15px;
+}
+.app .drawer-body {
+  padding: 22px 24px;
+}
+.app input:focus,
+.app select:focus,
+.app textarea:focus {
+  outline: 2px solid #9f7fd766;
+  outline-offset: 1px;
+}
+@media (max-width: 900px) {
+  .app .metric {
+    padding: 13px;
+  }
+  .app .metric strong {
+    font-size: 23px;
+  }
+  .app .page-head h1 {
+    font-size: 25px;
+  }
+}
+@media (max-width: 600px) {
+  .app .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .app .metric:nth-child(3) {
+    border-left: 0;
+  }
+  .app .metric:nth-child(n + 3) {
+    border-top: 1px solid var(--border);
+  }
+  .view-tools {
+    align-items: start;
+  }
+  .density-controls {
+    margin-left: auto;
+  }
+  .app .drawer {
+    width: 100vw;
+  }
+  .filter-disclosure .workflow-filters label {
+    min-width: 0;
+    flex-basis: 130px;
+  }
+  .app .lane {
+    flex-basis: 260px;
+  }
+  .app .page-head h1 {
+    font-size: 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .app .deal-card {
+    transition: none;
+  }
+}
+/* Semantic accents keep each stage recognizable across cards and tables. */
+:root {
+  --accent-blue: #90b4ff;
+  --accent-teal: #75d4c4;
+  --accent-amber: #f2c078;
+  --accent-pink: #e7a0d9;
+  --accent-green: #8bd5ab;
+  --accent-red: #f0a1ad;
+}
+.badge[data-stage="New"] {
+  color: #c2cadb;
+  background: #222735;
+  border-color: #3e475d;
+}
+.badge[data-stage="Contacted"] {
+  color: var(--accent-blue);
+  background: #19283f;
+  border-color: #344b73;
+}
+.badge[data-stage="Qualified"] {
+  color: #c4a5ff;
+  background: #2c2040;
+  border-color: #584173;
+}
+.badge[data-stage="Meeting Booked"] {
+  color: var(--accent-pink);
+  background: #352039;
+  border-color: #62406a;
+}
+.badge[data-stage="Proposal"],
+.badge[data-stage="Negotiation"] {
+  color: var(--accent-amber);
+  background: #342b1e;
+  border-color: #625135;
+}
+.badge[data-stage="Nurture"] {
+  color: var(--accent-teal);
+  background: #193330;
+  border-color: #345e58;
+}
+.app .metric:nth-child(4n + 1) strong {
+  color: var(--accent-blue);
+}
+.app .metric:nth-child(4n + 2) strong {
+  color: #c4a5ff;
+}
+.app .metric:nth-child(4n + 3) strong {
+  color: var(--accent-teal);
+}
+.app .metric:nth-child(4n + 4) strong {
+  color: var(--accent-amber);
+}
+.app .priority {
+  color: var(--accent-amber);
+}
+.app .lane[data-stage="New"] {
+  --stage-color: #9eaecb;
+}
+.app .lane-head h3 {
+  color: var(--stage-color, #c2cadb);
+}
+.app .lane-head h3 span {
+  color: var(--stage-color, #c2cadb);
+}

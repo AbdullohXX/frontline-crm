@@ -21,6 +21,7 @@ import {
   Download,
   Upload,
   Clock3,
+  SlidersHorizontal,
 } from "lucide-react";
 import {
   STAGES,
@@ -173,6 +174,7 @@ function Bars({
 function Badge({ stage }: { stage: string }) {
   return (
     <span
+      data-stage={stage}
       className={
         "badge " + (stage === "Won" ? "green" : stage === "Lost" ? "red" : "")
       }
@@ -198,6 +200,33 @@ function Field({
   );
 }
 export default function Workspace() {
+  const [density, setDensity] = useState<"comfortable" | "compact">(
+    "comfortable",
+  );
+  const searchField = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      const typing =
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target instanceof HTMLSelectElement ||
+        target.isContentEditable;
+      if (document.querySelector("dialog[open]")) return;
+      if (
+        ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") ||
+        (!typing && e.key === "/")
+      ) {
+        if (searchField.current) {
+          e.preventDefault();
+          searchField.current.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", key);
+    return () => document.removeEventListener("keydown", key);
+  }, []);
+
   const [boot, setBoot] = useState<Bootstrap | null>(null),
     [accessError, setAccessError] = useState(""),
     [view, setView] = useState<View>("day"),
@@ -886,37 +915,37 @@ export default function Workspace() {
   const titles: Record<View, [string, string, string]> = {
     day: [
       "YOUR DAILY FOCUS",
-      `Your next move, ${boot.member.display_name.split(" ")[0]}.`,
+      `My day, ${boot.member.display_name.split(" ")[0]}`,
       "Every conversation should have a clear next step.",
     ],
     pipeline: [
       "OPPORTUNITY MANAGEMENT",
-      "Keep the pipeline moving.",
+      "Sales pipeline",
       "Move opportunities forward. Capture what matters.",
     ],
     leads: [
       "YOUR RELATIONSHIP WORKSPACE",
-      "Every lead. One place.",
+      "All leads",
       "Find the context, then take the next step.",
     ],
     analytics: [
       "PERFORMANCE & INSIGHT",
-      "See the whole picture.",
+      "Analytics",
       "Current pipeline snapshots and recorded activity, clearly separated.",
     ],
     phone: [
       "CALLING WORKSPACE",
-      "Better conversations.",
+      "Calling workspace",
       "Work through your queue. Place calls in Getyn. Record the outcome here.",
     ],
     settings: [
       "ADMIN WORKSPACE",
-      "Built around your team.",
+      "Team & settings",
       "Manage access and bring your existing leads into the new CRM.",
     ],
   };
   return (
-    <div className="app">
+    <div className="app" data-density={density}>
       <aside className="sidebar">
         <div className="wordmark">
           FRONTLINE<span>·</span>
@@ -1093,176 +1122,265 @@ export default function Workspace() {
             />
           )}
           {!["analytics", "settings"].includes(view) && (
-            <div className="filters">
-              <label className="search">
-                <Search size={16} />
-                <input
-                  aria-label="Search leads"
-                  placeholder="Search company, contact, email, phone, or lead ID…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </label>
-              <label>
-                <span>Scope</span>
-                <select
-                  aria-label="Lead scope"
-                  value={scope}
-                  onChange={(e) => {
-                    setScope(e.target.value);
-                    setPage(0);
-                  }}
+            <>
+              <div className="view-tools">
+                <div
+                  className="quick-views"
+                  role="group"
+                  aria-label="Quick lead views"
                 >
-                  <option value="mine">My leads</option>
-                  <option value="all">All accessible leads</option>
-                </select>
-              </label>
-              {["day", "phone"].includes(view) ? (
+                  <button
+                    aria-pressed={
+                      scope === "all" &&
+                      !stage &&
+                      !exactDate &&
+                      !ownerFilter &&
+                      !workFilter &&
+                      !zoneFilter &&
+                      !archived
+                    }
+                    onClick={() => {
+                      resetFilters();
+                      setScope("all");
+                    }}
+                  >
+                    All accessible
+                  </button>
+                  <button
+                    aria-pressed={
+                      scope === "mine" &&
+                      !stage &&
+                      !exactDate &&
+                      !ownerFilter &&
+                      !workFilter &&
+                      !zoneFilter &&
+                      !archived
+                    }
+                    onClick={() => {
+                      resetFilters();
+                      setScope("mine");
+                    }}
+                  >
+                    My leads
+                  </button>
+                  <button
+                    aria-pressed={
+                      exactDate === today && dateField === "followup"
+                    }
+                    onClick={() => {
+                      resetFilters();
+                      setDateField("followup");
+                      setExactDate(today);
+                    }}
+                  >
+                    Follow-ups today
+                  </button>
+                </div>
+                <div
+                  className="density-controls"
+                  role="group"
+                  aria-label="Display density"
+                >
+                  <button
+                    aria-pressed={density === "comfortable"}
+                    onClick={() => setDensity("comfortable")}
+                  >
+                    Comfortable
+                  </button>
+                  <button
+                    aria-pressed={density === "compact"}
+                    onClick={() => setDensity("compact")}
+                  >
+                    Compact
+                  </button>
+                </div>
+              </div>
+              <div className="filters">
+                <label className="search">
+                  <Search size={16} />
+                  <input
+                    ref={searchField}
+                    aria-label="Search leads"
+                    placeholder="Search company, contact, email, phone, or lead ID…"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                  />
+                </label>
                 <label>
-                  <span>Queue</span>
+                  <span>Scope</span>
                   <select
-                    aria-label="Queue filter"
-                    value={due}
+                    aria-label="Lead scope"
+                    value={scope}
                     onChange={(e) => {
-                      setDue(e.target.value);
+                      setScope(e.target.value);
                       setPage(0);
                     }}
                   >
-                    <option value="due">Due & overdue</option>
-                    <option value="today">Today</option>
-                    <option value="overdue">Overdue</option>
-                    <option value="upcoming">Upcoming</option>
-                    <option value="unscheduled">Unscheduled</option>
-                    {view === "phone" && (
-                      <option value="all">All open leads</option>
-                    )}
+                    <option value="mine">My leads</option>
+                    <option value="all">All accessible leads</option>
                   </select>
                 </label>
-              ) : (
+                {["day", "phone"].includes(view) ? (
+                  <label>
+                    <span>Queue</span>
+                    <select
+                      aria-label="Queue filter"
+                      value={due}
+                      onChange={(e) => {
+                        setDue(e.target.value);
+                        setPage(0);
+                      }}
+                    >
+                      <option value="due">Due & overdue</option>
+                      <option value="today">Today</option>
+                      <option value="overdue">Overdue</option>
+                      <option value="upcoming">Upcoming</option>
+                      <option value="unscheduled">Unscheduled</option>
+                      {view === "phone" && (
+                        <option value="all">All open leads</option>
+                      )}
+                    </select>
+                  </label>
+                ) : (
+                  <label>
+                    <span>Stage</span>
+                    <select
+                      aria-label="Stage filter"
+                      value={stage}
+                      onChange={(e) => {
+                        setStage(e.target.value);
+                        setPage(0);
+                      }}
+                    >
+                      <option value="">All stages</option>
+                      {STAGES.map((s) => (
+                        <option key={s}>{s}</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+              </div>
+            </>
+          )}
+          {!["analytics", "settings"].includes(view) && (
+            <details className="filter-disclosure">
+              <summary>
+                <SlidersHorizontal size={14} /> More filters{" "}
+                <span>
+                  {[
+                    ownerFilter,
+                    zoneFilter,
+                    workFilter,
+                    exactDate,
+                    archived,
+                  ].filter(Boolean).length || ""}
+                </span>
+              </summary>
+              <div className="workflow-filters">
                 <label>
-                  <span>Stage</span>
+                  <span>Assigned agent</span>
                   <select
-                    aria-label="Stage filter"
-                    value={stage}
+                    aria-label="Assigned agent filter"
+                    value={ownerFilter}
                     onChange={(e) => {
-                      setStage(e.target.value);
+                      setOwnerFilter(e.target.value);
+                      setScope("all");
                       setPage(0);
                     }}
                   >
-                    <option value="">All stages</option>
-                    {STAGES.map((s) => (
-                      <option key={s}>{s}</option>
+                    <option value="">All accessible agents</option>
+                    {boot.members.map((m) => (
+                      <option key={m.email} value={m.email}>
+                        {m.display_name}
+                      </option>
                     ))}
                   </select>
                 </label>
-              )}
-            </div>
-          )}
-          {!["analytics", "settings"].includes(view) && (
-            <div className="workflow-filters">
-              <label>
-                <span>Assigned agent</span>
-                <select
-                  aria-label="Assigned agent filter"
-                  value={ownerFilter}
-                  onChange={(e) => {
-                    setOwnerFilter(e.target.value);
-                    setScope("all");
-                    setPage(0);
-                  }}
-                >
-                  <option value="">All accessible agents</option>
-                  {boot.members.map((m) => (
-                    <option key={m.email} value={m.email}>
-                      {m.display_name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span>Calling window / timezone</span>
-                <select
-                  aria-label="Calling window filter"
-                  value={zoneFilter}
-                  onChange={(e) => {
-                    setZoneFilter(e.target.value);
-                    setPage(0);
-                  }}
-                >
-                  <option value="">All timezones</option>
-                  <option value="calling">Open calling windows now</option>
-                  <option value="unknown">Timezone unknown</option>
-                  {ZONES.map(([z, label]) => (
-                    <option key={z} value={z}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span>Work category</span>
-                <select
-                  aria-label="Work category filter"
-                  value={workFilter}
-                  onChange={(e) => {
-                    setWorkFilter(e.target.value);
-                    setPage(0);
-                  }}
-                >
-                  <option value="">All categories</option>
-                  {WORK_STATUSES.map((w) => (
-                    <option key={w}>{w}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span>Date field</span>
-                <select
-                  aria-label="Specific date field"
-                  value={dateField}
-                  onChange={(e) => {
-                    setDateField(e.target.value);
-                    setPage(0);
-                  }}
-                >
-                  <option value="created">Original / created date</option>
-                  <option value="followup">Follow-up date</option>
-                </select>
-              </label>
-              <label>
-                <span>Specific date</span>
-                <input
-                  type="date"
-                  aria-label="Specific date"
-                  value={exactDate}
-                  onChange={(e) => {
-                    setExactDate(e.target.value);
-                    setPage(0);
-                  }}
-                />
-              </label>
-              {view === "leads" && (
                 <label>
-                  <span>Records</span>
+                  <span>Calling window / timezone</span>
                   <select
-                    aria-label="Archive filter"
-                    value={String(archived)}
+                    aria-label="Calling window filter"
+                    value={zoneFilter}
                     onChange={(e) => {
-                      setArchived(e.target.value === "true");
+                      setZoneFilter(e.target.value);
                       setPage(0);
                     }}
                   >
-                    <option value="false">Current leads</option>
-                    <option value="true">Archived leads</option>
+                    <option value="">All timezones</option>
+                    <option value="calling">Open calling windows now</option>
+                    <option value="unknown">Timezone unknown</option>
+                    {ZONES.map(([z, label]) => (
+                      <option key={z} value={z}>
+                        {label}
+                      </option>
+                    ))}
                   </select>
                 </label>
-              )}
-              <button onClick={resetFilters}>Reset filters</button>
-              <span className="fine">
-                Calling window: Mon–Fri, 9am–5pm in the lead's local time.
-                Unknown and split-state locations require a chosen timezone.
-              </span>
-            </div>
+                <label>
+                  <span>Work category</span>
+                  <select
+                    aria-label="Work category filter"
+                    value={workFilter}
+                    onChange={(e) => {
+                      setWorkFilter(e.target.value);
+                      setPage(0);
+                    }}
+                  >
+                    <option value="">All categories</option>
+                    {WORK_STATUSES.map((w) => (
+                      <option key={w}>{w}</option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  <span>Date field</span>
+                  <select
+                    aria-label="Specific date field"
+                    value={dateField}
+                    onChange={(e) => {
+                      setDateField(e.target.value);
+                      setPage(0);
+                    }}
+                  >
+                    <option value="created">Original / created date</option>
+                    <option value="followup">Follow-up date</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Specific date</span>
+                  <input
+                    type="date"
+                    aria-label="Specific date"
+                    value={exactDate}
+                    onChange={(e) => {
+                      setExactDate(e.target.value);
+                      setPage(0);
+                    }}
+                  />
+                </label>
+                {view === "leads" && (
+                  <label>
+                    <span>Records</span>
+                    <select
+                      aria-label="Archive filter"
+                      value={String(archived)}
+                      onChange={(e) => {
+                        setArchived(e.target.value === "true");
+                        setPage(0);
+                      }}
+                    >
+                      <option value="false">Current leads</option>
+                      <option value="true">Archived leads</option>
+                    </select>
+                  </label>
+                )}
+                <button onClick={resetFilters}>Reset filters</button>
+                <span className="fine">
+                  Calling window: Mon–Fri, 9am–5pm in the lead's local time.
+                  Unknown and split-state locations require a chosen timezone.
+                </span>
+              </div>
+            </details>
           )}
           {view === "day" && (
             <div className="day-layout">
@@ -1367,7 +1485,7 @@ export default function Workspace() {
                   Open a company to see the full context
                 </span>
               </div>
-              <div className="bulk-controls">
+              <div className="bulk-controls" data-selected={checked.length}>
                 <label>
                   <input
                     type="checkbox"
@@ -1490,6 +1608,7 @@ export default function Workspace() {
                   return (
                     <section
                       key={s}
+                      data-stage={s}
                       className={
                         "lane " + (hoverLane === s ? "drop-target" : "")
                       }
@@ -1532,6 +1651,19 @@ export default function Workspace() {
                             {l.company}
                           </button>
                           <p>{l.contact || "No contact name"}</p>
+                          <div className="card-owner">
+                            <span className="owner-dot">
+                              {(
+                                boot.members.find(
+                                  (m) => m.email === l.owner_email,
+                                )?.display_name || l.owner_email
+                              )
+                                .slice(0, 2)
+                                .toUpperCase()}
+                            </span>
+                            {boot.members.find((m) => m.email === l.owner_email)
+                              ?.display_name || l.owner_email}
+                          </div>
                           <small
                             className={
                               callingInfo(l, now).open
@@ -1553,6 +1685,25 @@ export default function Workspace() {
                               }
                             >
                               {l.priority}
+                            </span>
+                          </div>
+                          <div
+                            className={
+                              "card-next " +
+                              (l.next_follow_up && l.next_follow_up < today
+                                ? "card-overdue"
+                                : "")
+                            }
+                          >
+                            <Clock3 size={12} />
+                            <span>
+                              {l.next_follow_up
+                                ? (l.next_follow_up < today
+                                    ? "Overdue · "
+                                    : l.next_follow_up === today
+                                      ? "Today · "
+                                      : "") + l.next_follow_up
+                                : "No follow-up scheduled"}
                             </span>
                           </div>
                           <select
