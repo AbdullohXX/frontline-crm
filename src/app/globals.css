@@ -2276,3 +2276,12 @@ td input[type="checkbox"] {
     padding: 12px 16px;
   }
 }
+
+.lead-edit-pane {
+  border: 0;
+  margin: 0;
+  min-width: 0;
+}
+.lead-edit-pane:disabled {
+  opacity: 0.75;
+}

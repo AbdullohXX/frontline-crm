@@ -543,8 +543,13 @@ export default function Workspace() {
         duplicate_reason: duplicateReason,
       });
       setDirty(false);
-      drawer.current?.close();
-      setDraft(null);
+      if (chatDirty) {
+        setSelected(saved);
+        setDraft({ ...saved });
+      } else {
+        drawer.current?.close();
+        setDraft(null);
+      }
       setToast("Lead saved with audit history.");
       listCache.current.clear();
       reportAt.current = 0;
@@ -2208,7 +2213,7 @@ export default function Workspace() {
           </div>
         </div>
         <div className={"drawer-body " + (selected ? "lead-full-layout" : "")}>
-          <div className="lead-edit-pane">
+          <fieldset className="lead-edit-pane" disabled={chatBusy || saving}>
             {drawerError && (
               <div className="error" role="alert">
                 {drawerError}
@@ -2559,7 +2564,7 @@ export default function Workspace() {
                 </form>
               </>
             )}
-          </div>
+          </fieldset>
           {selected && (
             <LeadConversation
               key={selected.id}
