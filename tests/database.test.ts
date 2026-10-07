@@ -370,8 +370,108 @@ test("Database RLS, atomic audit, stale versions, reassignment, activity and imp
     /ACCESS/,
   );
   await assert.rejects(() => rpc("import_leads", []), /ACCESS/);
+  // Private media and attributed append-only chat: no client-supplied author or row writes.
+  await db.exec("reset role");
+  await db.exec(
+    `create schema storage; create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]); create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text,owner_id text,metadata jsonb); alter table storage.objects enable row level security; grant usage on schema storage to authenticated; grant select,insert,delete on storage.objects to authenticated;`,
+  );
+  await db.exec(
+    readFileSync(
+      "supabase/migrations/20261007182622_lead_conversations.sql",
+      "utf8",
+    ),
+  );
+  await identity(agent);
+  const originalNotes = shared.notes;
+  shared = await rpc("post_lead_message", {
+    lead_id: shared.id,
+    message: "Team chat note",
+    actor_name: "Forged admin",
+  });
+  const chat = (
+    await db.query<{ actor_email: string; actor_name: string }>(
+      "select * from public.activities where details='Team chat note'",
+    )
+  ).rows[0];
+  assert.equal(chat.actor_email, "agent@frontline-x.com");
+  assert.equal(chat.actor_name, "Agent");
+  assert.equal(shared.notes, originalNotes);
+  await assert.rejects(
+    () =>
+      rpc("post_lead_message", {
+        lead_id: shared.id,
+        message: "",
+        attachments: [],
+      }),
+    /Add a message/,
+  );
+  await db.exec("reset role");
+  const mediaPath = shared.id + "/image.png";
+  await db.query(
+    "insert into storage.objects(bucket_id,name,owner_id,metadata) values('lead-media',$1,$2,$3)",
+    [mediaPath, agent, JSON.stringify({ size: 16, mimetype: "image/png" })],
+  );
+  await identity(agent);
+  shared = await rpc("post_lead_message", {
+    lead_id: shared.id,
+    message: "",
+    attachments: [
+      { path: mediaPath, name: "image.png", size: 16, mime: "image/png" },
+    ],
+  });
+  assert.equal(
+    (await db.query("select * from public.lead_attachments")).rows.length,
+    1,
+  );
+  assert.equal(
+    (await db.query("delete from storage.objects returning *")).rows.length,
+    0,
+  );
+  await assert.rejects(
+    () =>
+      db.query(
+        "insert into public.lead_attachments(activity_id,path,name,mime,size) values($1,'bad','bad','image/png',1)",
+        [shared.id],
+      ),
+    /permission denied/,
+  );
+  const eventCount = (await db.query("select * from public.activities")).rows
+    .length;
+  await assert.rejects(
+    () =>
+      rpc("post_lead_message", {
+        lead_id: shared.id,
+        message: "Spoof",
+        attachments: [
+          {
+            path: shared.id + "/missing.png",
+            name: "x",
+            size: 1,
+            mime: "image/png",
+          },
+        ],
+      }),
+    /not available/,
+  );
+  assert.equal(
+    (await db.query("select * from public.activities")).rows.length,
+    eventCount,
+  );
+
   await identity(outsider);
   assert.equal((await db.query("select * from public.leads")).rows.length, 0);
+  assert.equal(
+    (await db.query("select * from public.lead_attachments")).rows.length,
+    0,
+  );
+  assert.equal(
+    (await db.query("select * from storage.objects")).rows.length,
+    0,
+  );
+  await assert.rejects(
+    () => rpc("post_lead_message", { lead_id: shared.id, message: "Denied" }),
+    /ACCESS/,
+  );
   await assert.rejects(() => rpc("save_lead", { ...shared }), /ACCESS/);
   await identity(owner);
   await rpc("save_member", {

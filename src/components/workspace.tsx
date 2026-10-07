@@ -34,6 +34,7 @@ import {
 } from "@/lib/types";
 import AdvancedAnalytics from "./advanced-analytics";
 import Reconciliation from "./reconciliation";
+import LeadConversation from "./lead-conversation";
 import { WORK_STATUSES, ZONES, callingInfo } from "@/lib/workflow";
 type View = "day" | "pipeline" | "leads" | "analytics" | "phone" | "settings";
 type Group = { label: string; count: number };
@@ -316,6 +317,8 @@ export default function Workspace() {
       rows: Record<string, unknown>[];
     } | null>(null),
     [importBusy, setImportBusy] = useState(false);
+  const [chatDirty, setChatDirty] = useState(false),
+    [chatBusy, setChatBusy] = useState(false);
   const drawer = useRef<HTMLDialogElement>(null),
     inputPhone = useRef<HTMLInputElement>(null),
     loadToken = useRef(0),
@@ -494,6 +497,8 @@ export default function Workspace() {
     tab: "details" | "activity" = "details",
     complete = false,
   ) {
+    setChatDirty(false);
+    setChatBusy(false);
     setSelected(l);
     setDraft(l ? { ...l } : emptyLead(boot!.member.email));
     setDrawerTab(tab);
@@ -517,7 +522,9 @@ export default function Workspace() {
     drawer.current?.showModal();
   }
   function close() {
-    if (dirty && !window.confirm("Discard unsaved changes?")) return;
+    if (saving || chatBusy) return;
+    if ((dirty || chatDirty) && !window.confirm("Discard unsaved changes?"))
+      return;
     drawer.current?.close();
     historyToken.current++;
     setDraft(null);
@@ -2128,7 +2135,11 @@ export default function Workspace() {
                 ? "OPPORTUNITY · " + selected.id.slice(0, 8)
                 : "NEW OPPORTUNITY"}
             </span>
-            <button aria-label="Close lead" onClick={close} disabled={saving}>
+            <button
+              aria-label="Close lead"
+              onClick={close}
+              disabled={saving || chatBusy}
+            >
               <X size={16} />
               Close
             </button>
@@ -2196,372 +2207,376 @@ export default function Workspace() {
             </button>
           </div>
         </div>
-        <div className="drawer-body">
-          {drawerError && (
-            <div className="error" role="alert">
-              {drawerError}
-            </div>
-          )}
-          {draft && drawerTab === "details" && (
-            <form onSubmit={saveLead}>
-              <div className="form-grid">
-                <div className="section-label">RELATIONSHIP</div>
-                <Field label="Company" full>
-                  <input
-                    aria-label="Company"
-                    required
-                    maxLength={200}
-                    value={draft.company}
-                    onChange={(e) => update("company", e.target.value)}
-                  />
-                </Field>
-                {(
-                  [
-                    "contact",
-                    "job_title",
-                    "email",
-                    "phone",
-                    "country",
-                    "industry",
-                    "source",
-                  ] as const
-                ).map((key) => (
-                  <Field
-                    key={key}
-                    label={
-                      {
-                        contact: "Contact name",
-                        job_title: "Job title",
-                        email: "Email",
-                        phone: "Phone",
-                        country: "Country",
-                        industry: "Industry",
-                        source: "Source",
-                      }[key]
-                    }
-                  >
+        <div className={"drawer-body " + (selected ? "lead-full-layout" : "")}>
+          <div className="lead-edit-pane">
+            {drawerError && (
+              <div className="error" role="alert">
+                {drawerError}
+              </div>
+            )}
+            {draft && drawerTab === "details" && (
+              <form onSubmit={saveLead}>
+                <div className="form-grid">
+                  <div className="section-label">RELATIONSHIP</div>
+                  <Field label="Company" full>
                     <input
-                      type={
-                        key === "email"
-                          ? "email"
-                          : key === "phone"
-                            ? "tel"
-                            : "text"
-                      }
-                      value={draft[key]}
-                      onChange={(e) => update(key, e.target.value)}
+                      aria-label="Company"
+                      required
+                      maxLength={200}
+                      value={draft.company}
+                      onChange={(e) => update("company", e.target.value)}
                     />
                   </Field>
-                ))}
-                <Field label="Lead timezone">
-                  <select
-                    value={draft.time_zone || ""}
-                    onChange={(e) => update("time_zone", e.target.value)}
-                  >
-                    <option value="">
-                      Auto from unambiguous US state / unknown
-                    </option>
-                    {ZONES.map(([z, label]) => (
-                      <option key={z} value={z}>
-                        {label}
+                  {(
+                    [
+                      "contact",
+                      "job_title",
+                      "email",
+                      "phone",
+                      "country",
+                      "industry",
+                      "source",
+                    ] as const
+                  ).map((key) => (
+                    <Field
+                      key={key}
+                      label={
+                        {
+                          contact: "Contact name",
+                          job_title: "Job title",
+                          email: "Email",
+                          phone: "Phone",
+                          country: "Country",
+                          industry: "Industry",
+                          source: "Source",
+                        }[key]
+                      }
+                    >
+                      <input
+                        type={
+                          key === "email"
+                            ? "email"
+                            : key === "phone"
+                              ? "tel"
+                              : "text"
+                        }
+                        value={draft[key]}
+                        onChange={(e) => update(key, e.target.value)}
+                      />
+                    </Field>
+                  ))}
+                  <Field label="Lead timezone">
+                    <select
+                      value={draft.time_zone || ""}
+                      onChange={(e) => update("time_zone", e.target.value)}
+                    >
+                      <option value="">
+                        Auto from unambiguous US state / unknown
                       </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Work category">
-                  <select
-                    value={draft.work_status || "None"}
-                    onChange={(e) => update("work_status", e.target.value)}
-                  >
-                    {WORK_STATUSES.map((w) => (
-                      <option key={w}>{w}</option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Score (0–100)">
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={draft.score ?? ""}
-                    onChange={(e) =>
-                      update(
-                        "score",
-                        e.target.value === "" ? null : Number(e.target.value),
-                      )
-                    }
-                  />
-                </Field>
-                <div className="section-label">OPPORTUNITY</div>
-                <Field label="Stage">
-                  <select
-                    value={draft.stage}
-                    onChange={(e) =>
-                      update("stage", e.target.value as Lead["stage"])
-                    }
-                  >
-                    {STAGES.map((s) => (
-                      <option key={s}>{s}</option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Deal value (USD)">
-                  <input
-                    type="number"
-                    min={0}
-                    step="0.01"
-                    value={draft.value}
-                    onChange={(e) => update("value", Number(e.target.value))}
-                  />
-                </Field>
-                <Field label="Priority">
-                  <select
-                    value={draft.priority}
-                    onChange={(e) =>
-                      update("priority", e.target.value as Lead["priority"])
-                    }
-                  >
-                    <option>High</option>
-                    <option>Medium</option>
-                    <option>Low</option>
-                  </select>
-                </Field>
-                <Field label="Status">
-                  <select
-                    value={draft.status}
-                    onChange={(e) =>
-                      update("status", e.target.value as Lead["status"])
-                    }
-                  >
-                    <option>Active</option>
-                    <option>Inactive</option>
-                    <option>Pending</option>
-                  </select>
-                </Field>
-                <Field label="Owner" full>
-                  <select
-                    disabled={boot.member.role !== "Admin"}
-                    value={draft.owner_email}
-                    onChange={(e) => update("owner_email", e.target.value)}
-                  >
-                    {boot.members
-                      .filter((m) => m.active || m.email === draft.owner_email)
-                      .map((m) => (
-                        <option key={m.email} value={m.email}>
-                          {m.display_name}
-                          {!m.active ? " (disabled)" : ""}
+                      {ZONES.map(([z, label]) => (
+                        <option key={z} value={z}>
+                          {label}
                         </option>
                       ))}
-                  </select>
-                </Field>
-                {draft.stage === "Lost" && (
-                  <Field label="Loss reason" full>
-                    <textarea
-                      required
-                      maxLength={500}
-                      value={draft.loss_reason}
-                      onChange={(e) => update("loss_reason", e.target.value)}
+                    </select>
+                  </Field>
+                  <Field label="Work category">
+                    <select
+                      value={draft.work_status || "None"}
+                      onChange={(e) => update("work_status", e.target.value)}
+                    >
+                      {WORK_STATUSES.map((w) => (
+                        <option key={w}>{w}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Score (0–100)">
+                    <input
+                      type="number"
+                      min={0}
+                      max={100}
+                      value={draft.score ?? ""}
+                      onChange={(e) =>
+                        update(
+                          "score",
+                          e.target.value === "" ? null : Number(e.target.value),
+                        )
+                      }
                     />
                   </Field>
-                )}
-                <div className="section-label">NEXT MOVE</div>
-                <Field label="Next action">
-                  <input
-                    maxLength={300}
-                    value={draft.next_action}
-                    onChange={(e) => update("next_action", e.target.value)}
-                  />
-                </Field>
-                <Field label="Follow-up date">
-                  <input
-                    type="date"
-                    value={draft.next_follow_up || ""}
-                    onChange={(e) =>
-                      update("next_follow_up", e.target.value || null)
-                    }
-                  />
-                </Field>
-                <Field label="Notes" full>
-                  <textarea
-                    maxLength={10000}
-                    value={draft.notes}
-                    onChange={(e) => update("notes", e.target.value)}
-                  />
-                </Field>
-                {boot.member.role === "Admin" &&
-                  drawerError.includes("DUPLICATE") && (
-                    <Field label="Reason to keep this as a separate lead" full>
-                      <input
+                  <div className="section-label">OPPORTUNITY</div>
+                  <Field label="Stage">
+                    <select
+                      value={draft.stage}
+                      onChange={(e) =>
+                        update("stage", e.target.value as Lead["stage"])
+                      }
+                    >
+                      {STAGES.map((s) => (
+                        <option key={s}>{s}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Deal value (USD)">
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={draft.value}
+                      onChange={(e) => update("value", Number(e.target.value))}
+                    />
+                  </Field>
+                  <Field label="Priority">
+                    <select
+                      value={draft.priority}
+                      onChange={(e) =>
+                        update("priority", e.target.value as Lead["priority"])
+                      }
+                    >
+                      <option>High</option>
+                      <option>Medium</option>
+                      <option>Low</option>
+                    </select>
+                  </Field>
+                  <Field label="Status">
+                    <select
+                      value={draft.status}
+                      onChange={(e) =>
+                        update("status", e.target.value as Lead["status"])
+                      }
+                    >
+                      <option>Active</option>
+                      <option>Inactive</option>
+                      <option>Pending</option>
+                    </select>
+                  </Field>
+                  <Field label="Owner" full>
+                    <select
+                      disabled={boot.member.role !== "Admin"}
+                      value={draft.owner_email}
+                      onChange={(e) => update("owner_email", e.target.value)}
+                    >
+                      {boot.members
+                        .filter(
+                          (m) => m.active || m.email === draft.owner_email,
+                        )
+                        .map((m) => (
+                          <option key={m.email} value={m.email}>
+                            {m.display_name}
+                            {!m.active ? " (disabled)" : ""}
+                          </option>
+                        ))}
+                    </select>
+                  </Field>
+                  {draft.stage === "Lost" && (
+                    <Field label="Loss reason" full>
+                      <textarea
                         required
-                        maxLength={300}
-                        value={duplicateReason}
-                        onChange={(e) => setDuplicateReason(e.target.value)}
+                        maxLength={500}
+                        value={draft.loss_reason}
+                        onChange={(e) => update("loss_reason", e.target.value)}
                       />
                     </Field>
                   )}
-              </div>
-              {selected && (
-                <p className="fine metadata">
-                  Version {selected.version} · Updated{" "}
-                  {new Date(selected.updated_at).toLocaleString()}
-                  <br />
-                  Original created date:{" "}
-                  {selected.original_created_date || "Not imported"}
-                  {selected.legacy_id && (
-                    <>
-                      <br />
-                      Legacy ID: {selected.legacy_id} · Original stage:{" "}
-                      {selected.legacy_stage}
-                    </>
-                  )}
-                </p>
-              )}
-              <div className="form-actions">
-                <button type="button" onClick={close} disabled={saving}>
-                  Cancel
-                </button>
-                <button
-                  className="primary"
-                  disabled={saving || !!selected?.archived_at}
-                >
-                  {saving
-                    ? "Saving…"
-                    : selected
-                      ? "Save changes"
-                      : "Create lead"}
-                </button>
-              </div>
-            </form>
-          )}
-          {drawerTab === "activity" && selected && (
-            <>
-              <form onSubmit={record} onChange={() => setDirty(true)}>
-                <h3>
-                  {activity.complete
-                    ? "Complete follow-up"
-                    : "Record a conversation"}
-                </h3>
-                <div className="form-grid">
-                  <Field label="Activity type">
-                    <select
-                      value={activity.type}
-                      onChange={(e) =>
-                        setActivity({
-                          ...activity,
-                          type: e.target.value,
-                          outcome:
-                            e.target.value === "Call"
-                              ? "Connected"
-                              : "Completed",
-                        })
-                      }
-                    >
-                      {["Call", "Email", "Meeting", "Note"].map((s) => (
-                        <option key={s}>{s}</option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Outcome">
-                    <select
-                      value={activity.outcome}
-                      onChange={(e) =>
-                        setActivity({ ...activity, outcome: e.target.value })
-                      }
-                    >
-                      {(activity.type === "Call"
-                        ? [
-                            "Connected",
-                            "No answer",
-                            "Voicemail",
-                            "Not interested",
-                            "Other",
-                          ]
-                        : OUTCOMES
-                      ).map((s) => (
-                        <option key={s}>{s}</option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="What happened?" full>
-                    <textarea
-                      required
-                      maxLength={4000}
-                      value={activity.details}
-                      onChange={(e) =>
-                        setActivity({ ...activity, details: e.target.value })
-                      }
-                    />
-                  </Field>
-                  <Field label="Next action (optional)">
+                  <div className="section-label">NEXT MOVE</div>
+                  <Field label="Next action">
                     <input
                       maxLength={300}
-                      value={activity.next_action}
-                      onChange={(e) =>
-                        setActivity({
-                          ...activity,
-                          next_action: e.target.value,
-                        })
-                      }
+                      value={draft.next_action}
+                      onChange={(e) => update("next_action", e.target.value)}
                     />
                   </Field>
-                  <Field label="Next follow-up">
+                  <Field label="Follow-up date">
                     <input
                       type="date"
-                      value={activity.next_follow_up}
+                      value={draft.next_follow_up || ""}
                       onChange={(e) =>
-                        setActivity({
-                          ...activity,
-                          next_follow_up: e.target.value,
-                        })
+                        update("next_follow_up", e.target.value || null)
                       }
                     />
                   </Field>
+                  <Field
+                    label={
+                      selected ? "Earlier notes (preserved)" : "Initial notes"
+                    }
+                    full
+                  >
+                    <textarea
+                      maxLength={10000}
+                      value={draft.notes}
+                      readOnly={!!selected}
+                      onChange={(e) => update("notes", e.target.value)}
+                    />
+                  </Field>
+                  {boot.member.role === "Admin" &&
+                    drawerError.includes("DUPLICATE") && (
+                      <Field
+                        label="Reason to keep this as a separate lead"
+                        full
+                      >
+                        <input
+                          required
+                          maxLength={300}
+                          value={duplicateReason}
+                          onChange={(e) => setDuplicateReason(e.target.value)}
+                        />
+                      </Field>
+                    )}
                 </div>
-                <p className="fine">
-                  Provide both next action and date to reschedule.{" "}
-                  {activity.complete
-                    ? "Leaving both blank clears this follow-up."
-                    : "Leaving both blank preserves the current follow-up."}
-                </p>
-                <button
-                  className="purple"
-                  disabled={saving || !!selected?.archived_at}
-                >
-                  {saving
-                    ? "Saving…"
-                    : activity.complete
-                      ? "Complete follow-up"
-                      : "Save activity"}
-                </button>
+                {selected && (
+                  <p className="fine metadata">
+                    Version {selected.version} · Updated{" "}
+                    {new Date(selected.updated_at).toLocaleString()}
+                    <br />
+                    Original created date:{" "}
+                    {selected.original_created_date || "Not imported"}
+                    {selected.legacy_id && (
+                      <>
+                        <br />
+                        Legacy ID: {selected.legacy_id} · Original stage:{" "}
+                        {selected.legacy_stage}
+                      </>
+                    )}
+                  </p>
+                )}
+                <div className="form-actions">
+                  <button type="button" onClick={close} disabled={saving}>
+                    Cancel
+                  </button>
+                  <button
+                    className="primary"
+                    disabled={saving || !!selected?.archived_at}
+                  >
+                    {saving
+                      ? "Saving…"
+                      : selected
+                        ? "Save changes"
+                        : "Create lead"}
+                  </button>
+                </div>
               </form>
-              <h3 className="timeline-title">
-                Activity timeline <small>Latest 100</small>
-              </h3>
-              {historyError && <p className="fine">{historyError}</p>}
-              {history.map((a) => (
-                <article className="activity-card" key={a.id}>
-                  <div className="flex between">
-                    <strong>
-                      {a.action}
-                      {a.outcome ? " · " + a.outcome : ""}
-                    </strong>
-                    <span>{a.actor_name}</span>
+            )}
+            {drawerTab === "activity" && selected && (
+              <>
+                <form onSubmit={record} onChange={() => setDirty(true)}>
+                  <h3>
+                    {activity.complete
+                      ? "Complete follow-up"
+                      : "Record a conversation"}
+                  </h3>
+                  <div className="form-grid">
+                    <Field label="Activity type">
+                      <select
+                        value={activity.type}
+                        onChange={(e) =>
+                          setActivity({
+                            ...activity,
+                            type: e.target.value,
+                            outcome:
+                              e.target.value === "Call"
+                                ? "Connected"
+                                : "Completed",
+                          })
+                        }
+                      >
+                        {["Call", "Email", "Meeting", "Note"].map((s) => (
+                          <option key={s}>{s}</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Outcome">
+                      <select
+                        value={activity.outcome}
+                        onChange={(e) =>
+                          setActivity({ ...activity, outcome: e.target.value })
+                        }
+                      >
+                        {(activity.type === "Call"
+                          ? [
+                              "Connected",
+                              "No answer",
+                              "Voicemail",
+                              "Not interested",
+                              "Other",
+                            ]
+                          : OUTCOMES
+                        ).map((s) => (
+                          <option key={s}>{s}</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="What happened?" full>
+                      <textarea
+                        required
+                        maxLength={4000}
+                        value={activity.details}
+                        onChange={(e) =>
+                          setActivity({ ...activity, details: e.target.value })
+                        }
+                      />
+                    </Field>
+                    <Field label="Next action (optional)">
+                      <input
+                        maxLength={300}
+                        value={activity.next_action}
+                        onChange={(e) =>
+                          setActivity({
+                            ...activity,
+                            next_action: e.target.value,
+                          })
+                        }
+                      />
+                    </Field>
+                    <Field label="Next follow-up">
+                      <input
+                        type="date"
+                        value={activity.next_follow_up}
+                        onChange={(e) =>
+                          setActivity({
+                            ...activity,
+                            next_follow_up: e.target.value,
+                          })
+                        }
+                      />
+                    </Field>
                   </div>
-                  <p>{a.details}</p>
-                  {a.to_stage && a.from_stage && (
-                    <p>
-                      {a.from_stage} → {a.to_stage}
-                    </p>
-                  )}
-                  {a.next_action && (
-                    <p>
-                      Next: {a.next_action} · {a.next_follow_up}
-                    </p>
-                  )}
-                  <small>{new Date(a.created_at).toLocaleString()}</small>
-                </article>
-              ))}
-            </>
+                  <p className="fine">
+                    Provide both next action and date to reschedule.{" "}
+                    {activity.complete
+                      ? "Leaving both blank clears this follow-up."
+                      : "Leaving both blank preserves the current follow-up."}
+                  </p>
+                  <button
+                    className="purple"
+                    disabled={saving || !!selected?.archived_at}
+                  >
+                    {saving
+                      ? "Saving…"
+                      : activity.complete
+                        ? "Complete follow-up"
+                        : "Save activity"}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+          {selected && (
+            <LeadConversation
+              key={selected.id}
+              lead={selected}
+              boot={boot}
+              disabled={dirty || saving}
+              onDraftChange={setChatDirty}
+              onBusyChange={setChatBusy}
+              onSaved={(saved) => {
+                setSelected(saved);
+                setDraft({ ...saved });
+                listCache.current.clear();
+                reportAt.current = 0;
+                void load(true);
+                void loadHistory(saved);
+              }}
+            />
           )}
         </div>
       </dialog>

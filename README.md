@@ -121,3 +121,11 @@ Keep package-lock.json for reproducible installs. Never commit .env.local or a s
 Analytics now has Overview, Pipeline & health, and Activity & team sections. Filters include dates, assigned owner and normalized lead source; snapshots do not change with the event date filter. Reporting normalizes LinkedIn casing and US/UK country variants without editing lead records. Unknown imported stage entry dates remain excluded and labeled.
 
 The authenticated analytics endpoint reads all RLS-visible pages and returns aggregates. It supports up to 50,000 leads and 50,000 activity records, reporting an explicit error above those limits. Event periods are capped at 30 years. Large-scale use should replace paginated reads with database aggregation. JSON report export includes selected filters and generation time.
+
+### Lead conversations and media
+
+Existing leads open in a full-screen workspace with a shared, append-only conversation beside the detail/activity forms. Every message is attributed from the authenticated team account and timestamped in the CRM timezone. Earlier notes and imported creation information remain visible; missing historical authorship is labeled as unknown. Unsaved detail edits must be saved/cancelled before posting. Conversations refresh every 30 seconds while visible and can load older history.
+
+Apply `supabase/migrations/20261007182622_lead_conversations.sql` after the shared-access migration. It creates the private `lead-media` bucket and RLS-protected attachment metadata. Browser uploads use the signed-in Supabase account, not a service key. Up to four attachments per message are supported: images up to 8 MB and audio recordings up to 25 MB. Media access is authorized by `/api/media`; uploaded files already linked to a message cannot be removed through the uploader cleanup policy. Failed message uploads are cleaned up when possible.
+
+Getyn automatic recording synchronization is not configured. Download a recording from Getyn and attach it to the lead conversation for playback. Supported media: JPG, PNG, WebP, GIF, MP3, WAV, OGG, M4A and WebM audio. Account Storage quotas and billing still apply.
