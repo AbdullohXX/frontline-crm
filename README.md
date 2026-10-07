@@ -1,5 +1,34 @@
 # Frontline CRM
 
+## Explee hot-lead ingestion
+
+Project 43138 syncs through `/api/cron/explee`. The existing Vercel Hobby
+plan permits only daily native cron, so `.github/workflows/explee-hot-leads.yml`
+triggers the protected Vercel function approximately every ten minutes. GitHub
+schedules are best effort and may be delayed. Manual workflow dispatch retries safely.
+
+Production environment variables: `EXPLEE_API_KEY`, `CRON_SECRET`, and the existing
+Supabase URL/publishable key. GitHub secret `EXPLEE_CRON_SECRET` must match
+Vercel's `CRON_SECRET`. Never commit these values. No service-role key is required.
+The dedicated ingestion token is checked against a SHA-256 hash in the private
+`crm_private.explee_state` table; only trusted deployment administration provisions it.
+
+Apply migration `20261007134652_explee_hot_leads.sql` once. Provision the private
+state for project 43138 with the token hash and active administrator owner.
+The deployed instance uses `info@frontline-x.com`. New contacts are Qualified/High.
+Existing contacts match by Explee person ID, email, LinkedIn URL or normalized phone;
+company name alone does not merge different people. Existing owner/stage stay intact.
+All source fields and every qualifying reply are preserved in `explee_hot_leads.contact`
+and activity history; company domain, LinkedIn URL and latest hot reply also have lead columns.
+
+Each run freezes `since`, verifies campaign ownership, fetches all pages, then commits
+contacts, audit records and the newest `became_hot_at` atomically. Inclusive cursor
+replays are deduplicated. Failed runs keep the previous cursor. A six-minute lease
+prevents overlapping runs, and the shared CRM write lock prevents identity races.
+Null timestamps are preserved and never move the cursor. The first run imports the
+current hot feed. Dismissed/unsubscribed contacts disappear upstream; this sync does
+not delete existing CRM records. Check GitHub run failures and Vercel logs for errors.
+
 A Next.js application with Supabase PostgreSQL, Google company login, lead management, follow-ups, a pipeline, activity history, reporting, team administration and CSV migration. It replaces the Apps Script runtime. The existing Sheets CRM is not modified.
 
 ## Preview now (Windows)
