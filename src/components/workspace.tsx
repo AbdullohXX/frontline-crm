@@ -33,6 +33,7 @@ import {
   type LeadInput,
 } from "@/lib/types";
 import AdvancedAnalytics from "./advanced-analytics";
+import ThemeSwitcher from "./theme-switcher";
 import Reconciliation from "./reconciliation";
 import LeadConversation from "./lead-conversation";
 import QuoDashboard, { QuoAnalytics } from "./quo-dashboard";
@@ -1024,6 +1025,7 @@ export default function Workspace() {
             <b>{nav.find((n) => n[0] === view)?.[1]}</b>
           </span>
           <div className="flex">
+            <ThemeSwitcher />
             <span className="sync" role="status" aria-live="polite">
               <i />
               {boot.demo
@@ -2138,11 +2140,14 @@ export default function Workspace() {
       >
         <div className="drawer-head">
           <div className="flex between">
-            <span className="eyebrow">
-              {selected
-                ? "OPPORTUNITY · " + selected.id.slice(0, 8)
-                : "NEW OPPORTUNITY"}
-            </span>
+            <div className="lead-identity">
+              <h2 id="drawer-title">{selected?.company || "New lead"}</h2>
+              <span className="eyebrow">
+                {selected
+                  ? "OPPORTUNITY · " + selected.id.slice(0, 8)
+                  : "NEW OPPORTUNITY"}
+              </span>
+            </div>
             <button
               aria-label="Close lead"
               onClick={close}
@@ -2152,7 +2157,6 @@ export default function Workspace() {
               Close
             </button>
           </div>
-          <h2 id="drawer-title">{selected?.company || "New lead"}</h2>
           {selected && (
             <div className="detail-actions">
               {selected.email && (

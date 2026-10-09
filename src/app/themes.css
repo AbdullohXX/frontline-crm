@@ -1,0 +1,350 @@
+.theme-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+}
+.theme-switcher select {
+  width: auto;
+  min-width: 90px;
+  padding: 7px 24px 7px 9px;
+  font-size: 12px;
+  background-color: var(--panel);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f5fb;
+  --panel: #fff;
+  --border: #d7dfed;
+  --muted: #58677e;
+  --text: #18243a;
+  --purple: #7053c1;
+  --accent-blue: #3869b9;
+  --accent-teal: #16786c;
+  --accent-amber: #986011;
+  --accent-pink: #a83e88;
+  --accent-green: #257445;
+  --accent-red: #b43a52;
+}
+:root[data-theme="light"] body {
+  background:
+    radial-gradient(ellipse at 85% 0%, #e9e4fa, transparent 55%), var(--bg);
+}
+:root[data-theme="light"] button,
+:root[data-theme="light"] .button {
+  background: #fff;
+  color: #273a59;
+  border-color: #cbd6e8;
+}
+:root[data-theme="light"] button:hover,
+:root[data-theme="light"] .button:hover {
+  background: #eaf0fb;
+  border-color: #9cafcf;
+}
+:root[data-theme="light"] .primary,
+:root[data-theme="light"] .purple {
+  background: linear-gradient(120deg, #7154bf, #476fd0);
+  color: #fff;
+  border-color: #7053c1;
+}
+:root[data-theme="light"] .primary:hover,
+:root[data-theme="light"] .purple:hover {
+  background: linear-gradient(120deg, #6040aa, #335dbb);
+  color: #fff;
+}
+:root[data-theme="light"] input,
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea {
+  background: #fff;
+  color: var(--text);
+  border-color: #cbd6e8;
+}
+:root[data-theme="light"] input::placeholder,
+:root[data-theme="light"] textarea::placeholder {
+  color: #6c7c95;
+}
+:root[data-theme="light"] .app .sidebar {
+  background: linear-gradient(165deg, #fff, #edf1fa);
+  border-color: #d7dfed;
+}
+:root[data-theme="light"] .wordmark small,
+:root[data-theme="light"] .nav-label,
+:root[data-theme="light"] .brand-link,
+:root[data-theme="light"] .sidebar-footer small {
+  color: #596984;
+}
+:root[data-theme="light"] .app .sidebar nav button {
+  background: transparent;
+  color: #4d607d;
+  border-color: transparent;
+}
+:root[data-theme="light"] .app .sidebar nav button:hover {
+  background: #e6eafa;
+  color: #273552;
+}
+:root[data-theme="light"] .app .sidebar nav button.active {
+  background: linear-gradient(100deg, #e3d8fc, #e8edff);
+  color: #563886;
+  box-shadow: inset 3px 0 #8461cd;
+}
+:root[data-theme="light"] .sidebar nav button.active svg {
+  color: #7053c1;
+}
+:root[data-theme="light"] .avatar,
+:root[data-theme="light"] .chat-avatar {
+  background: #e8dff9;
+  color: #654695;
+}
+:root[data-theme="light"] .app .topbar {
+  background: #ffffffd9;
+  border-color: var(--border);
+}
+:root[data-theme="light"] .topbar b,
+:root[data-theme="light"] .topbar .sync {
+  color: #425774;
+}
+:root[data-theme="light"] .app .page-head .eyebrow {
+  color: #7053c1;
+}
+:root[data-theme="light"] .app .page-head p {
+  color: var(--muted);
+}
+:root[data-theme="light"] .app .company-strip {
+  background: linear-gradient(100deg, #e8effe, #eeeafa);
+  color: #273a59;
+  border-color: #cbd8ed;
+}
+:root[data-theme="light"] .company-strip a,
+:root[data-theme="light"] .company-strip a:hover {
+  color: #315f9e;
+}
+:root[data-theme="light"] .app .metric {
+  background: linear-gradient(140deg, #fff, #edf2fb);
+  border-color: #d0daeb;
+}
+:root[data-theme="light"] .app .metric + .metric {
+  border-left-color: #d0daeb;
+}
+:root[data-theme="light"] .app .metric .eyebrow {
+  color: #526781;
+}
+:root[data-theme="light"] .app .metric strong {
+  color: #3869b9;
+}
+:root[data-theme="light"] .app .metric:nth-child(2) strong {
+  color: #7053c1;
+}
+:root[data-theme="light"] .app .metric:nth-child(3) strong {
+  color: #16786c;
+}
+:root[data-theme="light"] .app .metric:nth-child(4) strong {
+  color: #986011;
+}
+:root[data-theme="light"] .app .panel,
+:root[data-theme="light"] .insight-card,
+:root[data-theme="light"] .chart-card,
+:root[data-theme="light"] .quo-charts section {
+  background: #fff;
+  border-color: var(--border);
+  box-shadow: 0 4px 18px #26345208;
+}
+:root[data-theme="light"] .panel-head,
+:root[data-theme="light"] .task-row,
+:root[data-theme="light"] .bulk-controls,
+:root[data-theme="light"] .table-footer {
+  border-color: var(--border);
+}
+:root[data-theme="light"] .app table thead th {
+  background: #eaf0fa;
+  color: #4d6385;
+}
+:root[data-theme="light"] .app table td {
+  border-color: #e1e7f1;
+}
+:root[data-theme="light"] .app table tbody tr:hover,
+:root[data-theme="light"] .app .task-row:hover {
+  background: #f0f4fc;
+}
+:root[data-theme="light"] .app .text-button {
+  background: transparent;
+  border-color: transparent;
+  color: #243856;
+}
+:root[data-theme="light"] .app .text-button:hover {
+  color: #7053c1;
+}
+:root[data-theme="light"] .app .filter-disclosure {
+  background: #fff;
+  border-color: #cbd6e8;
+}
+:root[data-theme="light"] .filter-disclosure summary {
+  color: #4d607d;
+}
+:root[data-theme="light"] .filter-disclosure summary span:not(:empty) {
+  background: #e8dff9;
+  color: #654695;
+}
+:root[data-theme="light"] .quick-views button,
+:root[data-theme="light"] .density-controls button {
+  background: transparent;
+  border-color: transparent;
+  color: #58677e;
+}
+:root[data-theme="light"] .quick-views button[aria-pressed="true"],
+:root[data-theme="light"] .density-controls button[aria-pressed="true"] {
+  background: #e5def7;
+  border-color: #c5b7e3;
+  color: #60458e;
+}
+:root[data-theme="light"] .density-controls {
+  background: #fff;
+}
+:root[data-theme="light"] .app .lane {
+  background: #eaf0fa;
+  border-color: #d1dceb;
+  border-top-color: var(--stage-color, #3869b9);
+}
+:root[data-theme="light"] .app .lane-head h3 span {
+  background: #fff;
+  color: #415574;
+}
+:root[data-theme="light"] .app .deal-card {
+  background: #fff;
+  border-color: #ccd7e9;
+}
+:root[data-theme="light"] .app .deal-card p,
+:root[data-theme="light"] .card-owner {
+  color: #536981;
+}
+:root[data-theme="light"] .app .drawer {
+  background: #f7f9fd;
+}
+:root[data-theme="light"] .app .drawer-head,
+:root[data-theme="light"] .conversation-head,
+:root[data-theme="light"] .chat-composer {
+  background: #eef2fb;
+  border-color: #ccd8eb;
+}
+:root[data-theme="light"] .app .drawer-tabs button.active {
+  background: #e5def7;
+  border-color: #b8a5d9;
+  color: #60458e;
+}
+:root[data-theme="light"] .lead-full-layout .lead-edit-pane {
+  border-color: var(--border);
+}
+:root[data-theme="light"] .lead-conversation {
+  background: #f9fbff;
+}
+:root[data-theme="light"] .chat-bubble {
+  background: #e9f0fb;
+  border-color: #c3d3e9;
+}
+:root[data-theme="light"] .chat-message.mine .chat-bubble {
+  background: #ede5fc;
+  border-color: #cebbea;
+}
+:root[data-theme="light"] .chat-author {
+  color: #364e70;
+}
+:root[data-theme="light"] .chat-author time,
+:root[data-theme="light"] .chat-bubble small,
+:root[data-theme="light"] .chat-legacy small {
+  color: #58677e;
+}
+:root[data-theme="light"] .chat-legacy,
+:root[data-theme="light"] .chat-event .chat-bubble {
+  background: #f0edf9;
+  border-color: #d5ccea;
+}
+:root[data-theme="light"] .quo-lead-tools {
+  background: #e9f5f2;
+  border-color: #b5d8d1;
+}
+:root[data-theme="light"] .notice,
+:root[data-theme="light"] .demo-banner {
+  background: #efe9fa;
+  color: #60458e;
+  border-color: #d6c8ed;
+}
+:root[data-theme="light"] .error {
+  background: #fcebef;
+  color: #952d43;
+  border-color: #eab6c2;
+}
+:root[data-theme="light"] .toast {
+  background: #edf8f1;
+  color: #275d3d;
+  border-color: #bad9c5;
+}
+:root[data-theme="light"] .login-card {
+  background: #fff;
+  border-color: var(--border);
+}
+:root[data-theme="light"] .section-label,
+:root[data-theme="light"] .form-grid label,
+:root[data-theme="light"] .filters label {
+  color: #536981;
+}
+:root[data-theme="light"] .badge {
+  background: #edf1f8;
+  color: #415574;
+  border-color: #d2dceb;
+}
+:root[data-theme="light"] .badge.green,
+:root[data-theme="light"] .badge[data-stage="Won"] {
+  background: #e3f4e9;
+  color: #267347;
+  border-color: #b5d9c2;
+}
+:root[data-theme="light"] .badge.red,
+:root[data-theme="light"] .badge[data-stage="Lost"] {
+  background: #f9e5ea;
+  color: #a3324c;
+  border-color: #e9b9c6;
+}
+:root[data-theme="light"] .badge[data-stage="Qualified"],
+:root[data-theme="light"] .badge[data-stage="Meeting Booked"] {
+  background: #eee6fb;
+  color: #7053a1;
+  border-color: #cfbde7;
+}
+:root[data-theme="light"] .badge[data-stage="Proposal"],
+:root[data-theme="light"] .badge[data-stage="Negotiation"] {
+  background: #fff0d9;
+  color: #8b5a15;
+  border-color: #ebd1a6;
+}
+@media (max-width: 700px) {
+  .theme-switcher {
+    gap: 4px;
+  }
+  .theme-switcher select {
+    min-width: 76px;
+    padding: 7px;
+    font-size: 11px;
+  }
+  .topbar > .flex {
+    gap: 7px;
+  }
+  .topbar .sync {
+    display: none;
+  }
+}
+:root[data-theme="light"] .field > span,
+:root[data-theme="light"] .chat-system,
+:root[data-theme="light"] .chat-compose-actions label {
+  color: #58677e;
+}
+:root[data-theme="light"] .form-actions {
+  background: #f7f9fd;
+  border-top: 1px solid var(--border);
+}
+:root[data-theme="light"] .drawer-tabs button {
+  color: #536981;
+}
