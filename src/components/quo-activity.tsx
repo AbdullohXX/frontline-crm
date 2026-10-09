@@ -1,10 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { mergeQuoDetails } from "@/lib/quo-details";
 export default function QuoActivity({ event }: { event: any }) {
   const [details, setDetails] = useState<any>(event.payload || {}),
     [open, setOpen] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
+  useEffect(() => {
+    setDetails((previous: any) => mergeQuoDetails(previous, event.payload || {}));
+  }, [event.payload]);
   async function load() {
     setOpen(true);
     setBusy(true);
@@ -16,7 +20,7 @@ export default function QuoActivity({ event }: { event: any }) {
       );
       const d = await r.json();
       if (!r.ok) throw Error(d.error);
-      setDetails(d);
+      setDetails((previous: any) => mergeQuoDetails(previous, d));
     } catch (e) {
       setError((e as Error).message);
     } finally {
