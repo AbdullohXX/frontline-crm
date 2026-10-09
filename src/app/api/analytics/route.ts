@@ -71,7 +71,7 @@ export async function GET(request: Request) {
       ),
       collect(
         "activities",
-        "id,lead_id,actor_email,actor_name,action,outcome,from_stage,to_stage,deal_value,created_at",
+        "id,lead_id,actor_email,actor_name,action,details,outcome,from_stage,to_stage,deal_value,created_at",
       ),
     ]);
     return json(

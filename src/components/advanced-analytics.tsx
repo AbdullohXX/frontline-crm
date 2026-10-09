@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Productivity from "./productivity";
 import { STAGES, type Bootstrap } from "@/lib/types";
 import type { AdvancedReport, Slice } from "@/lib/analytics";
 const colors = [
@@ -654,6 +655,9 @@ export default function AdvancedAnalytics({
             )}
             {tab === "Activity & team" && (
               <>
+                <div className="insight-wide">
+                  <Productivity boot={boot} report={r} from={from} to={to} />
+                </div>
                 <Card
                   title="Calls by agent"
                   hint="Agent who logged the call · selected owner filters the lead assignment"

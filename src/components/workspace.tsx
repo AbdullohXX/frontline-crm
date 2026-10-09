@@ -1,5 +1,7 @@
 "use client";
 import Image from "next/image";
+import CallScript from "./call-script";
+import { ActiveUsage } from "./productivity";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   LayoutDashboard,
@@ -868,6 +870,7 @@ export default function Workspace() {
             {l.phone && (
               <a href={"tel:" + l.phone.replace(/[^+\d]/g, "")}>Call</a>
             )}
+            <button onClick={() => openLead(l, "details")}>Script</button>
             <button onClick={() => openLead(l, "activity")}>History</button>
             <button
               disabled={pendingIds.includes(l.id)}
@@ -964,6 +967,7 @@ export default function Workspace() {
   };
   return (
     <div className="app" data-density={density}>
+      <ActiveUsage demo={boot.demo} />
       <aside className="sidebar">
         <div className="wordmark">
           <div className="brand-identity">
@@ -2175,6 +2179,7 @@ export default function Workspace() {
               )}
             </div>
           )}
+          {selected && <CallScript lead={selected} agent={boot.member.display_name} />}
           <div className="drawer-tabs">
             <button
               className={drawerTab === "details" ? "active" : ""}

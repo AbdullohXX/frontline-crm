@@ -228,6 +228,19 @@ export function analytics(
         overdue: assigned.filter(
           (l) => !closed(l) && !!l.next_follow_up && l.next_follow_up < o.today,
         ).length,
+        recent: period
+          .filter((a) => a.actor_email === m.email)
+          .sort((a, b) => b.created_at.localeCompare(a.created_at))
+          .slice(0, 3)
+          .map((a) => ({
+            id: a.id,
+            action: a.action,
+            details: a.details || "",
+            at: a.created_at,
+          })),
+        emails: period.filter(
+          (a) => a.actor_email === m.email && a.action === "Email",
+        ).length,
         calls: agentCalls.length,
         connected: agentCalls.filter((a) => a.outcome === "Connected").length,
         wins: wins.filter((a) => a.actor_email === m.email).length,
