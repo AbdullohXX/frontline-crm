@@ -76,11 +76,23 @@ export async function GET(request: Request) {
       if (fe) throw Error("Could not load attachments.");
       attachments = files || [];
     }
+    const { data: quo, error: qe } = events.length
+      ? await db
+          .from("quo_events")
+          .select("*")
+          .eq("lead_id", id)
+          .in(
+            "activity_id",
+            events.map((a) => a.id),
+          )
+      : { data: [], error: null };
+    if (qe) throw Error("Could not load Quo history.");
     return json({
       lead,
       hasMore: (data || []).length > 100,
       events: events.map((a) => ({
         ...a,
+        quo: quo?.find((e) => e.activity_id === a.id),
         attachments: attachments
           .filter((f) => f.activity_id === a.id)
           .map((f) => ({

@@ -760,8 +760,8 @@ export default function AdvancedAnalytics({
           <div className="notice">
             Snapshot charts describe current lead records. Imported history is
             not reconstructed. All charts respect database permissions. Event
-            charts describe activity logged in this CRM; they do not imply
-            automatic Getyn call synchronization.
+            charts describe activity logged in this CRM; Quo provider activity
+            is shown separately above.
           </div>
         </>
       ) : null}

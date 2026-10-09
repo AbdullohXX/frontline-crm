@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { syncQueuedContacts } from "@/lib/quo-server";
 import { authorized, localDemo, HttpError } from "@/lib/auth";
 import { json, failure, sameOrigin, body } from "@/lib/http";
 import { leadSchema, date } from "@/lib/validation";
@@ -109,6 +111,12 @@ export async function POST(request: Request) {
       .rpc("save_lead", { p: { ...data, ...meta } })
       .single();
     if (error) throw new Error(error.message);
+    if (process.env.QUO_API_KEY)
+      after(async () => {
+        await syncQueuedContacts(1, (saved as any).id).catch(() =>
+          console.error("Quo contact sync queued for retry"),
+        );
+      });
     return json(saved);
   } catch (e) {
     return failure(e);

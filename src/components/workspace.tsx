@@ -35,6 +35,7 @@ import {
 import AdvancedAnalytics from "./advanced-analytics";
 import Reconciliation from "./reconciliation";
 import LeadConversation from "./lead-conversation";
+import QuoDashboard, { QuoAnalytics } from "./quo-dashboard";
 import { WORK_STATUSES, ZONES, callingInfo } from "@/lib/workflow";
 type View = "day" | "pipeline" | "leads" | "analytics" | "phone" | "settings";
 type Group = { label: string; count: number };
@@ -68,7 +69,7 @@ const nav: [View, string, typeof Phone][] = [
   ["pipeline", "Pipeline", Columns3],
   ["leads", "All leads", Users],
   ["analytics", "Analytics", ChartNoAxesCombined],
-  ["phone", "Getyn Phone", Phone],
+  ["phone", "Quo Phone", Phone],
   ["settings", "Settings", Settings],
 ];
 const emptyLead = (owner: string): LeadInput => ({
@@ -692,7 +693,7 @@ export default function Workspace() {
   async function copyNumber(l: Lead) {
     try {
       await navigator.clipboard.writeText(l.phone);
-      setToast("Number copied. Paste it into Getyn’s dialpad.");
+      setToast("Number copied. Paste it into Quo’s dialpad.");
     } catch {
       inputPhone.current?.focus();
       inputPhone.current?.select();
@@ -948,7 +949,7 @@ export default function Workspace() {
     phone: [
       "CALLING WORKSPACE",
       "Calling workspace",
-      "Work through your queue. Place calls in Getyn. Record the outcome here.",
+      "Work through your queue. Place calls in Quo. Record the outcome here.",
     ],
     settings: [
       "ADMIN WORKSPACE",
@@ -1743,30 +1744,34 @@ export default function Workspace() {
             </>
           )}
           {view === "analytics" && (
-            <AdvancedAnalytics
-              boot={boot}
-              onStage={(label) => {
-                navigate("leads");
-                setStage(label);
-                setScope("all");
-              }}
-            />
+            <>
+              <QuoAnalytics boot={boot} />
+              <AdvancedAnalytics
+                boot={boot}
+                onStage={(label) => {
+                  navigate("leads");
+                  setStage(label);
+                  setScope("all");
+                }}
+              />
+            </>
           )}
           {view === "phone" && (
             <>
+              <QuoDashboard boot={boot} />
               <div className="notice">
-                Place and answer calls in Getyn’s dashboard. Copying a number or
-                opening Getyn does not start a call. Call reports use manually
-                logged CRM activities.
+                Use the calling queue below to work through your leads. Quo
+                activity syncs automatically; you can still record outcomes
+                here.
               </div>
               <div className="flex wrap phone-links">
                 <a
-                  href="https://phone.getyn.com/"
+                  href="https://my.quo.com/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="button purple"
                 >
-                  Open Getyn <ArrowUpRight size={16} />
+                  Open Quo <ArrowUpRight size={16} />
                 </a>
                 <button onClick={() => setSkips([])}>
                   Reset session skips
@@ -1825,11 +1830,11 @@ export default function Workspace() {
                           </button>
                           <a
                             className="button purple"
-                            href="https://phone.getyn.com/"
+                            href="https://my.quo.com/"
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            Open Getyn <ArrowUpRight size={15} />
+                            Open Quo <ArrowUpRight size={15} />
                           </a>
                           <button
                             className="primary"
@@ -2177,7 +2182,7 @@ export default function Workspace() {
                     setPhoneId(selected.id);
                   }}
                 >
-                  Getyn call workflow <Phone size={14} />
+                  Quo call workflow <Phone size={14} />
                 </button>
               )}
             </div>

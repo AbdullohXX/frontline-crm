@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Paperclip, Send, RefreshCw, X, MessageSquare } from "lucide-react";
+import QuoActivity from "./quo-activity";
+import QuoLeadTools from "./quo-lead-tools";
 import { browserDatabase } from "@/lib/supabase/client";
 import type { Lead, Bootstrap, Activity } from "@/lib/types";
 type Attachment = {
@@ -12,6 +14,7 @@ type Attachment = {
 };
 type Event = Activity & {
   attachments: Attachment[];
+  quo?: any;
   snapshot?: { before?: Lead; after?: Lead };
 };
 export default function LeadConversation({
@@ -34,6 +37,8 @@ export default function LeadConversation({
     [files, setFiles] = useState<File[]>([]),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
+    [quoDirty, setQuoDirty] = useState(false),
+    [quoBusy, setQuoBusy] = useState(false),
     [loading, setLoading] = useState(true),
     [more, setMore] = useState(false);
   const list = useRef<HTMLDivElement>(null),
@@ -44,11 +49,11 @@ export default function LeadConversation({
     nearBottom = useRef(true),
     alive = useRef(true);
   useEffect(() => {
-    onDraftChange(!!text || files.length > 0);
-  }, [text, files.length]);
+    onDraftChange(!!text || files.length > 0 || quoDirty);
+  }, [text, files.length, quoDirty]);
   useEffect(() => {
-    onBusyChange(busy);
-  }, [busy]);
+    onBusyChange(busy || quoBusy);
+  }, [busy, quoBusy]);
   const date = (value: string) =>
     new Intl.DateTimeFormat("en-US", {
       timeZone: boot.timeZone,
@@ -94,6 +99,10 @@ export default function LeadConversation({
   useEffect(() => {
     alive.current = true;
     void load();
+    const refreshed = () => {
+      void load();
+    };
+    window.addEventListener("quo-refreshed", refreshed);
     const timer = setInterval(() => {
       if (!document.hidden && !sending.current) void load();
     }, 30000);
@@ -101,6 +110,7 @@ export default function LeadConversation({
       alive.current = false;
       lastFetch.current++;
       clearInterval(timer);
+      window.removeEventListener("quo-refreshed", refreshed);
     };
   }, [lead.id]);
   useEffect(() => {
@@ -147,7 +157,7 @@ export default function LeadConversation({
   }
   async function send(e: FormEvent) {
     e.preventDefault();
-    if (sending.current || disabled || boot.demo) return;
+    if (sending.current || quoBusy || disabled || boot.demo) return;
     setBusy(true);
     sending.current = true;
     setError("");
@@ -235,6 +245,14 @@ export default function LeadConversation({
           <RefreshCw size={15} />
         </button>
       </header>
+      <QuoLeadTools
+        lead={lead}
+        boot={boot}
+        disabled={disabled || busy || quoBusy || !!lead.archived_at}
+        onDirty={setQuoDirty}
+        onBusy={setQuoBusy}
+        onSaved={onSaved}
+      />
       <div
         className="chat-log"
         ref={list}
@@ -326,6 +344,7 @@ export default function LeadConversation({
                   </strong>
                 )}
                 {event.details && <p>{event.details}</p>}
+                {event.quo && <QuoActivity event={event.quo} />}
                 {event.from_stage &&
                   event.to_stage &&
                   event.from_stage !== event.to_stage && (
@@ -422,7 +441,9 @@ export default function LeadConversation({
           maxLength={4000}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          disabled={busy || disabled || !!lead.archived_at || boot.demo}
+          disabled={
+            busy || quoBusy || disabled || !!lead.archived_at || boot.demo
+          }
         />
         <div className="chat-compose-actions">
           <label className="button">
@@ -433,7 +454,9 @@ export default function LeadConversation({
               type="file"
               multiple
               accept="image/jpeg,image/png,image/webp,image/gif,audio/mpeg,audio/wav,audio/x-wav,audio/ogg,audio/mp4,audio/webm"
-              disabled={busy || disabled || !!lead.archived_at || boot.demo}
+              disabled={
+                busy || quoBusy || disabled || !!lead.archived_at || boot.demo
+              }
               onChange={(e) => {
                 selectFiles(Array.from(e.target.files || []));
                 e.target.value = "";
@@ -444,6 +467,7 @@ export default function LeadConversation({
             className="purple"
             disabled={
               busy ||
+              quoBusy ||
               disabled ||
               !!lead.archived_at ||
               boot.demo ||

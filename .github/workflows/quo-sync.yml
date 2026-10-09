@@ -1,0 +1,22 @@
+name: Sync Quo communication activity
+on:
+  schedule:
+    - cron: "7,17,27,37,47,57 * * * *"
+  workflow_dispatch:
+permissions: {}
+concurrency:
+  group: quo-communication-sync
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Trigger authenticated CRM sync
+        env:
+          CRON_SECRET: ${{ secrets.EXPLEE_CRON_SECRET }}
+        run: |
+          test -n "$CRON_SECRET"
+          curl --fail-with-body --silent --show-error --max-time 300 \
+            --header "Authorization: Bearer $CRON_SECRET" \
+            https://frontline-crm-two.vercel.app/api/cron/quo

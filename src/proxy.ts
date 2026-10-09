@@ -2,7 +2,12 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
-  if (request.nextUrl.pathname === "/api/cron/explee") return response;
+  if (
+    ["/api/cron/explee", "/api/cron/quo", "/api/quo/webhook"].includes(
+      request.nextUrl.pathname,
+    )
+  )
+    return response;
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY

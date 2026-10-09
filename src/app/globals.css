@@ -1568,9 +1568,12 @@ td input[type="checkbox"] {
   line-height: 1.4;
 }
 .app .company-strip {
-  font-size: 11px;
-  margin-bottom: 16px;
-  color: #878792;
+  font-size: clamp(16px, 1.2vw, 18px);
+  font-weight: 600;
+  line-height: 1.6;
+  gap: 12px 24px;
+  margin-bottom: 20px;
+  color: var(--text);
 }
 .app .metrics {
   gap: 0;
@@ -2284,4 +2287,207 @@ td input[type="checkbox"] {
 }
 .lead-edit-pane:disabled {
   opacity: 0.75;
+}
+
+.quo-workspace {
+  display: grid;
+  gap: 20px;
+}
+.quo-note,
+.quo-number {
+  padding: 12px 22px;
+}
+.quo-note {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.quo-number {
+  display: flex;
+  gap: 20px;
+  border-top: 1px solid var(--border);
+}
+.quo-filters {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: end;
+  padding: 18px 22px;
+}
+.quo-filters label {
+  display: grid;
+  gap: 7px;
+}
+.quo-kpis {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0 22px 22px;
+}
+.quo-kpis > div {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 15px;
+  background: rgba(104, 203, 179, 0.05);
+}
+.quo-kpis strong {
+  display: block;
+  font-size: 24px;
+  margin-top: 9px;
+}
+.quo-kpis small {
+  color: var(--muted);
+}
+.quo-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px;
+  padding: 0 22px 22px;
+}
+.quo-charts section {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  min-width: 0;
+}
+.quo-bars {
+  max-height: 350px;
+  overflow: auto;
+}
+.quo-bars > div {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) 2fr 36px;
+  gap: 10px;
+  align-items: center;
+  margin: 11px 0;
+  font-size: 12px;
+}
+.quo-bars > div > div {
+  height: 12px;
+  background: rgba(128, 128, 128, 0.1);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.quo-bars i {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  min-width: 2px;
+}
+.quo-admin {
+  padding: 18px 22px;
+}
+.quo-admin summary,
+.quo-lead-tools summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+.quo-mapping {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+.quo-mapping span {
+  min-width: 180px;
+}
+.quo-mapping small {
+  display: block;
+  color: var(--muted);
+}
+.quo-mapping select {
+  flex: 1;
+}
+.quo-history {
+  border-top: 1px solid var(--border);
+  padding: 18px 22px;
+}
+.quo-history time,
+.quo-origin {
+  font-size: 12px;
+  color: var(--muted);
+}
+.quo-history p {
+  line-height: 1.6;
+}
+.quo-message-text {
+  white-space: pre-wrap;
+}
+.quo-call-detail > button {
+  display: block;
+  margin: 10px 0;
+}
+.quo-artifacts {
+  border-left: 3px solid #68cbb3;
+  padding: 8px 16px;
+  line-height: 1.6;
+}
+.quo-artifacts audio {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  margin: 10px 0;
+}
+.quo-artifacts details {
+  margin-top: 12px;
+}
+.quo-link {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0;
+}
+.quo-load-more {
+  margin: 20px;
+}
+.quo-lead-tools {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin: 12px 16px;
+  padding: 13px;
+  background: rgba(104, 203, 179, 0.04);
+}
+.quo-lead-tools label {
+  display: grid;
+  gap: 7px;
+  margin: 12px 0;
+}
+.quo-lead-tools textarea {
+  min-height: 85px;
+  resize: vertical;
+}
+.quo-lead-tools p {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.quo-analytics {
+  margin-bottom: 22px;
+}
+.quo-artifacts p {
+  white-space: pre-wrap;
+}
+@media (max-width: 1000px) {
+  .quo-kpis {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .quo-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .quo-charts {
+    grid-template-columns: 1fr;
+  }
+  .quo-history time {
+    display: block;
+  }
+  .quo-history > .flex {
+    flex-wrap: wrap;
+  }
+  .quo-filters label {
+    flex: 1;
+  }
+  .quo-mapping select {
+    max-width: 100%;
+  }
 }
