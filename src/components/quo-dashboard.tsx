@@ -125,19 +125,19 @@ export function QuoAnalytics({ boot }: { boot: Bootstrap }) {
           <div className="quo-charts">
             <section>
               <h4>Calls by day</h4>
-              {bars(data.daily, "#68cbb3")}
+              {bars(data.daily, "var(--accent-teal)")}
             </section>
             <section>
               <h4>Calls by Quo user</h4>
-              {bars(named(data.agents), "#a879ff")}
+              {bars(named(data.agents), "var(--chart-1)")}
             </section>
             <section>
               <h4>Call outcomes</h4>
-              {bars(data.statuses, "#f1b45b")}
+              {bars(data.statuses, "var(--chart-3)")}
             </section>
             <section>
               <h4>Incoming vs outgoing</h4>
-              {bars(data.directions, "#718af0")}
+              {bars(data.directions, "var(--chart-5)")}
             </section>
           </div>
         </>

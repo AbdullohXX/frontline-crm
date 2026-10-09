@@ -3,16 +3,24 @@ import { useEffect, useState } from "react";
 import { STAGES, type Bootstrap } from "@/lib/types";
 import type { AdvancedReport, Slice } from "@/lib/analytics";
 const colors = [
-  "#a879ff",
-  "#5ec9c2",
-  "#f1b45b",
-  "#f0809d",
-  "#718af0",
-  "#b3c464",
-  "#dc91e1",
-  "#7cabb6",
-  "#b6a99d",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--chart-6)",
+  "var(--chart-7)",
+  "var(--chart-8)",
+  "var(--chart-9)",
 ];
+function heatStyle(count: number, max: number) {
+  const level =
+    count / max > 0.66 ? "high" : count / max > 0.33 ? "mid" : "low";
+  return {
+    background: count ? "var(--heat-" + level + "-bg)" : "var(--chart-track)",
+    color: "var(--heat-" + level + "-ink)",
+  };
+}
 const money = (n: number) =>
   new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -106,7 +114,7 @@ function Donut({ rows }: { rows: Slice[] }) {
           cy="100"
           r="72"
           fill="none"
-          stroke="#25232c"
+          stroke="var(--chart-track)"
           strokeWidth="24"
         />
         {rows.map((r, i) => {
@@ -137,13 +145,19 @@ function Donut({ rows }: { rows: Slice[] }) {
           x="100"
           y="99"
           textAnchor="middle"
-          fill="white"
+          fill="var(--text)"
           fontSize="30"
           fontWeight="700"
         >
           {total}
         </text>
-        <text x="100" y="122" textAnchor="middle" fill="#aaa4b8" fontSize="12">
+        <text
+          x="100"
+          y="122"
+          textAnchor="middle"
+          fill="var(--muted)"
+          fontSize="12"
+        >
           total
         </text>
       </svg>
@@ -210,14 +224,14 @@ function Trend({
               x2="650"
               y1={y(f * max)}
               y2={y(f * max)}
-              stroke="#292630"
+              stroke="var(--border)"
             />
             <text
               x="40"
               y={y(f * max) + 4}
               textAnchor="end"
               fontSize="11"
-              fill="#a7a1b4"
+              fill="var(--muted)"
             >
               {revenue ? money(f * max) : Math.round(f * max)}
             </text>
@@ -263,7 +277,7 @@ function Trend({
               x={x(rows.indexOf(r))}
               y="235"
               textAnchor="middle"
-              fill="#a7a1b4"
+              fill="var(--muted)"
               fontSize="11"
             >
               {r.label}
@@ -325,6 +339,7 @@ export default function AdvancedAnalytics({
   }, [from, to, owner, source, refresh]);
   const r = report,
     s = r?.summary;
+  const heatMax = Math.max(1, ...(r?.heatmap.flat() || []));
   const exportReport = () => {
     if (!r) return;
     const content = JSON.stringify(
@@ -727,11 +742,7 @@ export default function AdvancedAnalytics({
                               key={h}
                               tabIndex={0}
                               className="heat-cell"
-                              style={{
-                                background: count
-                                  ? `rgba(168,121,255,${0.25 + (0.75 * count) / Math.max(1, ...r.heatmap.flat())})`
-                                  : "#25232c",
-                              }}
+                              style={heatStyle(count, heatMax)}
                               aria-label={`${["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][d]} ${h}:00: ${count} calls`}
                               title={`${h}:00 · ${count} calls`}
                             >
@@ -743,7 +754,7 @@ export default function AdvancedAnalytics({
                     </div>
                   </div>
                   <p className="muted">
-                    Darker cells mean fewer calls. Times show when calls were
+                    Stronger color means more calls. Times show when calls were
                     logged, not carrier-verified call start times.
                   </p>
                 </Card>

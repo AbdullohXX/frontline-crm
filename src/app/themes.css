@@ -348,3 +348,168 @@
 :root[data-theme="light"] .drawer-tabs button {
   color: #536981;
 }
+:root {
+  --chart-track: #242c3d;
+  --chart-1: #a879ff;
+  --chart-2: #5ec9c2;
+  --chart-3: #f1b45b;
+  --chart-4: #f0809d;
+  --chart-5: #718af0;
+  --chart-6: #b3c464;
+  --chart-7: #dc91e1;
+  --chart-8: #7cabb6;
+  --chart-9: #b6a99d;
+}
+:root[data-theme="light"] {
+  --chart-track: #e3e9f3;
+  --chart-1: #7953b9;
+  --chart-2: #22877e;
+  --chart-3: #ac731b;
+  --chart-4: #c14e70;
+  --chart-5: #4b66c2;
+  --chart-6: #748326;
+  --chart-7: #a44eaa;
+  --chart-8: #3c7787;
+  --chart-9: #867260;
+}
+:root[data-theme="light"] .filters .search {
+  background: #fff;
+  border-color: var(--border);
+}
+:root[data-theme="light"] .filters .search input {
+  background: transparent;
+}
+:root[data-theme="light"] .bar-row > span,
+:root[data-theme="light"] .bar-row b {
+  color: var(--text);
+}
+:root[data-theme="light"] .bar-row i,
+:root[data-theme="light"] .insight-bar i {
+  background: var(--chart-track);
+}
+:root[data-theme="light"] .insight-bar,
+:root[data-theme="light"] .bar-row,
+:root[data-theme="light"] .insight-bar:hover,
+:root[data-theme="light"] .bar-row:hover {
+  background: transparent;
+  color: var(--text);
+  border-color: transparent;
+}
+:root[data-theme="light"] .analytics-tabs button {
+  background: transparent;
+  color: var(--muted);
+}
+:root[data-theme="light"] .analytics-tabs button.active {
+  background: #e8dff9;
+  border-color: #b4a0d4;
+  color: #60458e;
+}
+:root[data-theme="light"] .insight-table th,
+:root[data-theme="light"] .insight-table td {
+  border-color: var(--border);
+}
+:root[data-theme="light"] .heat-cell:focus,
+:root[data-theme="light"] .trend-svg circle:focus {
+  outline-color: #7053c1;
+  stroke: #263a5b;
+}
+:root[data-theme="light"] .task-icon {
+  background: #eee6fb;
+  color: #7053c1;
+}
+:root[data-theme="light"] .task-icon.late {
+  background: #fae5ea;
+  color: #a3324c;
+}
+:root[data-theme="light"] .card-owner > span {
+  background: #e8dff9;
+  color: #654695;
+}
+:root[data-theme="light"] .card-next {
+  border-color: var(--border);
+}
+:root[data-theme="light"] .card-overdue {
+  color: #a3324c;
+}
+:root[data-theme="light"] .app .deal-card select {
+  background: #fff;
+  border-color: var(--border);
+}
+:root[data-theme="light"] .drop-target {
+  background: #eee6fb !important;
+  outline-color: #7053c1;
+}
+:root[data-theme="light"] .calling-open {
+  color: #16786c !important;
+}
+:root[data-theme="light"] .chat-event-title {
+  color: #286d7e;
+}
+:root[data-theme="light"] .chat-pending {
+  background: #eee6fb;
+  color: #60458e;
+}
+:root[data-theme="light"] .app .lane[data-stage="New"] {
+  --stage-color: #526b92;
+}
+:root[data-theme="light"] .app .lane[data-stage="Contacted"] {
+  --stage-color: #3869b9;
+}
+:root[data-theme="light"] .app .lane[data-stage="Qualified"] {
+  --stage-color: #7053c1;
+}
+:root[data-theme="light"] .app .lane[data-stage="Meeting Booked"] {
+  --stage-color: #a83e88;
+}
+:root[data-theme="light"] .app .lane[data-stage="Proposal"],
+:root[data-theme="light"] .app .lane[data-stage="Negotiation"] {
+  --stage-color: #986011;
+}
+:root[data-theme="light"] .app .lane[data-stage="Nurture"] {
+  --stage-color: #16786c;
+}
+:root[data-theme="light"] .app .lane[data-stage="Won"] {
+  --stage-color: #257445;
+}
+:root[data-theme="light"] .app .lane[data-stage="Lost"] {
+  --stage-color: #b43a52;
+}
+:root[data-theme="light"] .app .lane-head h3 {
+  color: var(--stage-color);
+}
+:root[data-theme="light"] .badge[data-stage="Contacted"] {
+  color: #3869b9;
+  background: #e5edfa;
+  border-color: #c3d4ed;
+}
+:root[data-theme="light"] .badge[data-stage="Nurture"] {
+  color: #16786c;
+  background: #e0f1eb;
+  border-color: #b7dbd0;
+}
+:root[data-theme="light"] .pagination,
+:root[data-theme="light"] .sidebar-footer,
+:root[data-theme="light"] .quiet-card {
+  border-color: var(--border);
+}
+:root[data-theme="light"] .app .table-wrap,
+:root[data-theme="light"] .chat-log,
+:root[data-theme="light"] .lead-edit-pane {
+  scrollbar-color: #a6b4cc transparent;
+}
+:root {
+  --heat-low-bg: #3b2c55;
+  --heat-low-ink: #e4d6ff;
+  --heat-mid-bg: #7853aa;
+  --heat-mid-ink: #fff;
+  --heat-high-bg: #a879ff;
+  --heat-high-ink: #18132b;
+}
+:root[data-theme="light"] {
+  --heat-low-bg: #ede7fa;
+  --heat-low-ink: #60458e;
+  --heat-mid-bg: #c4afea;
+  --heat-mid-ink: #3b255c;
+  --heat-high-bg: #7953b9;
+  --heat-high-ink: #fff;
+}

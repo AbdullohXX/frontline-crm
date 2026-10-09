@@ -42,8 +42,8 @@ button,
   padding: 10px 13px;
   border: 1px solid #333339;
   border-radius: 8px;
-  background: #1b1b1f;
-  color: #efeff5;
+  background: var(--panel);
+  color: var(--text);
   cursor: pointer;
   font-size: 12px;
   text-decoration: none;
@@ -51,7 +51,7 @@ button,
 }
 button:hover,
 .button:hover {
-  background: #26262c;
+  background: var(--panel);
   border-color: #55555d;
 }
 button:disabled {
@@ -144,7 +144,7 @@ p {
   top: 0;
   height: 100vh;
   padding: 34px 18px 22px;
-  background: #0d0d10;
+  background: var(--panel);
   border-right: 1px solid #242429;
   display: flex;
   flex-direction: column;
@@ -165,14 +165,14 @@ p {
   font-weight: 400;
   font-size: 9px;
   letter-spacing: 1.2px;
-  color: #81818c;
+  color: var(--muted);
   margin-top: 9px;
 }
 .nav-label {
   font-size: 9px;
   letter-spacing: 1.8px;
   margin: 48px 14px 14px;
-  color: #70707a;
+  color: var(--muted);
 }
 .sidebar nav {
   display: grid;
@@ -181,7 +181,7 @@ p {
 .sidebar nav button {
   border: 0;
   background: transparent;
-  color: #9d9da8;
+  color: var(--muted);
   justify-content: flex-start;
   padding: 13px 14px;
   font-size: 13px;
@@ -222,14 +222,14 @@ p {
   height: 32px;
   width: 32px;
   border-radius: 50%;
-  background: #2a2237;
+  background: var(--panel);
   color: #cfc0ef;
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
 .brand-link {
-  color: #797984;
+  color: var(--muted);
   font-size: 10px;
   display: flex;
   align-items: center;
@@ -250,7 +250,7 @@ p {
   font-size: 11px;
 }
 .topbar b {
-  color: #d0d0d7;
+  color: var(--muted);
   font-weight: 400;
 }
 .divider {
@@ -372,12 +372,12 @@ p {
   height: 34px;
   width: 34px;
   border-radius: 10px;
-  background: #242033;
+  background: var(--panel);
   color: #b59aff;
   flex-shrink: 0;
 }
 .task-icon.late {
-  background: #351e26;
+  background: var(--panel);
   color: #ec9aa9;
 }
 .text-button {
@@ -385,7 +385,7 @@ p {
   border: 0;
   padding: 0;
   justify-content: flex-start;
-  color: #ededf2;
+  color: var(--text);
   font-size: 13px;
   font-weight: 600;
   text-align: left;
@@ -398,12 +398,12 @@ p {
 }
 .task-row p {
   font-size: 11px;
-  color: #9c9ca7;
+  color: var(--muted);
   margin-top: 7px;
 }
 .task-row small {
   display: block;
-  color: #81818d;
+  color: var(--muted);
   font-size: 10px;
   margin-top: 5px;
 }
@@ -431,13 +431,13 @@ p {
 }
 .badge.red {
   color: #efa5b3;
-  background: #351c25;
+  background: var(--panel);
   border-color: #643444;
 }
 .quiet-card {
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: #111114;
+  background: var(--panel);
   padding: 24px;
   margin-top: 20px;
   position: relative;
@@ -481,17 +481,17 @@ p {
 .bar-row > span {
   display: flex;
   justify-content: space-between;
-  color: #bcbcc8;
+  color: var(--muted);
   gap: 12px;
 }
 .bar-row b {
-  color: #eeeef4;
+  color: var(--text);
   font-weight: 500;
 }
 .bar-row i {
   display: block;
   height: 6px;
-  background: #232329;
+  background: var(--panel);
   border-radius: 3px;
   overflow: hidden;
   margin-top: 9px;
@@ -522,14 +522,14 @@ p {
   min-width: 145px;
 }
 .filters label > span {
-  color: #9a9aa7;
+  color: var(--muted);
   font-size: 10px;
 }
 .filters .search {
   display: flex;
   flex-direction: row;
   align-items: center;
-  background: #151518;
+  background: var(--panel);
   border: 1px solid #303037;
   border-radius: 8px;
   gap: 8px;
@@ -544,7 +544,7 @@ p {
   width: 100%;
 }
 .search svg {
-  color: #777782;
+  color: var(--muted);
 }
 .filters .muted {
   font-size: 11px;
@@ -553,8 +553,8 @@ p {
 input,
 select,
 textarea {
-  background: #17171b;
-  color: #ededf4;
+  background: var(--panel);
+  color: var(--text);
   border: 1px solid #34343c;
   border-radius: 7px;
   padding: 10px 12px;
@@ -584,7 +584,7 @@ th {
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #848490;
+  color: var(--muted);
   font-weight: 500;
   padding: 16px 19px;
   border-bottom: 1px solid #303035;
@@ -599,7 +599,7 @@ td {
 td small {
   display: block;
   font-size: 10px;
-  color: #878794;
+  color: var(--muted);
   margin-top: 6px;
 }
 tbody tr:hover {
@@ -614,7 +614,7 @@ tbody tr:hover {
   align-items: center;
   justify-content: space-between;
   padding: 15px 20px;
-  color: #888894;
+  color: var(--muted);
   font-size: 10px;
   border-top: 1px solid #252529;
   gap: 12px;
@@ -643,7 +643,7 @@ tbody tr:hover {
   flex: 0 0 250px;
   border: 1px solid #282830;
   border-radius: 10px;
-  background: #0f0f12;
+  background: var(--panel);
   padding: 13px;
   min-height: 370px;
 }
@@ -661,12 +661,12 @@ tbody tr:hover {
 }
 .lane-head p {
   font-size: 10px;
-  color: #81818c;
+  color: var(--muted);
   margin-top: 8px;
 }
 .deal-card {
   border: 1px solid #34343d;
-  background: #1a1a20;
+  background: var(--panel);
   border-radius: 9px;
   padding: 15px;
   margin-bottom: 12px;
@@ -721,15 +721,15 @@ tbody tr:hover {
 }
 .notice {
   padding: 17px 20px;
-  background: #19151f;
+  background: var(--panel);
   border: 1px solid #44364f;
   border-radius: 10px;
   font-size: 12px;
   line-height: 1.7;
-  color: #c4bccf;
+  color: var(--muted);
 }
 .error {
-  background: #2b171f;
+  background: var(--panel);
   border: 1px solid #703345;
   color: #f4b6c5;
   padding: 13px 16px;
@@ -749,7 +749,7 @@ tbody tr:hover {
 .demo-banner {
   padding: 10px 14px;
   border: 1px solid #47355f;
-  background: #22182e;
+  background: var(--panel);
   border-radius: 7px;
   color: #cbbbdf;
   font-size: 11px;
@@ -800,7 +800,7 @@ tbody tr:hover {
 }
 .field > span {
   font-size: 11px;
-  color: #a6a6b2;
+  color: var(--muted);
 }
 .field small {
   color: var(--muted);
@@ -840,7 +840,7 @@ tbody tr:hover {
   width: 660px;
   border: 1px solid #34343c;
   border-right: 0;
-  background: #111114;
+  background: var(--panel);
   color: var(--text);
   padding: 0;
   overflow: auto;
@@ -852,7 +852,7 @@ tbody tr:hover {
 .drawer-head {
   position: sticky;
   top: 0;
-  background: #151518;
+  background: var(--panel);
   z-index: 2;
   border-bottom: 1px solid #303036;
   padding: 24px 28px;
@@ -872,7 +872,7 @@ tbody tr:hover {
 .drawer-tabs button {
   background: transparent;
   border-color: transparent;
-  color: #93939f;
+  color: var(--muted);
 }
 .drawer-tabs button.active {
   background: #30243e;
@@ -893,7 +893,7 @@ tbody tr:hover {
 .form-actions {
   position: sticky;
   bottom: -26px;
-  background: #111114;
+  background: var(--panel);
   padding: 20px 0 10px;
   display: flex;
   justify-content: flex-end;
@@ -931,14 +931,14 @@ tbody tr:hover {
 }
 .activity-card p {
   font-size: 12px;
-  color: #b3b3c0;
+  color: var(--muted);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   margin: 9px 0;
 }
 .activity-card small {
   font-size: 10px;
-  color: #848490;
+  color: var(--muted);
 }
 .toast {
   position: fixed;
@@ -969,7 +969,7 @@ tbody tr:hover {
   border: 1px solid #333039;
   border-radius: 20px;
   padding: 42px;
-  background: #121215;
+  background: var(--panel);
 }
 .login-card .wordmark {
   padding: 0;
@@ -1179,7 +1179,7 @@ tbody tr:hover {
   flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
-  color: #aaa4b8;
+  color: var(--muted);
   font-size: 12px;
   margin: 16px 0;
 }
@@ -1201,7 +1201,7 @@ tbody tr:hover {
 .analytics-tabs button {
   border-color: transparent;
   background: transparent;
-  color: #aaa4b8;
+  color: var(--muted);
 }
 .analytics-tabs button.active {
   color: #fff;
@@ -1253,7 +1253,7 @@ tbody tr:hover {
   display: block;
   height: 8px;
   border-radius: 4px;
-  background: #24222b;
+  background: var(--panel);
   overflow: hidden;
 }
 .insight-bar em {
@@ -1312,7 +1312,7 @@ tbody tr:hover {
 .trend-summary {
   font-size: 12px;
   min-height: 26px;
-  color: #c4b9da;
+  color: var(--muted);
 }
 .line-legend {
   display: flex;
@@ -1337,7 +1337,7 @@ tbody tr:hover {
 }
 .insight-table th {
   text-align: left;
-  color: #b1a8c1;
+  color: var(--muted);
   font-weight: 500;
 }
 .insight-table th,
@@ -1374,7 +1374,7 @@ tbody tr:hover {
 }
 .heat-hour {
   text-align: center;
-  color: #aaa4b8;
+  color: var(--muted);
 }
 .insight-body > p {
   font-size: 12px;
@@ -1571,7 +1571,7 @@ td input[type="checkbox"] {
 .app .metric {
   border: 0;
   border-radius: 0;
-  background: #121216;
+  background: var(--panel);
   padding: 15px 20px;
   gap: 7px;
 }
@@ -1586,18 +1586,18 @@ td input[type="checkbox"] {
   font-size: 10px;
 }
 .app .sidebar {
-  background: #101014;
+  background: var(--panel);
 }
 .app .sidebar nav button {
   border-radius: 7px;
 }
 .app .sidebar nav button.active {
-  background: #251d36;
-  color: #ede6ff;
+  background: var(--panel);
+  color: var(--text);
   box-shadow: inset 2px 0 #b39aff;
 }
 .app .topbar {
-  background: #0d0d11;
+  background: var(--panel);
   border-bottom-color: #24242b;
 }
 .app .panel {
@@ -1625,11 +1625,11 @@ td input[type="checkbox"] {
   padding: 7px 10px;
   background: transparent;
   border-color: transparent;
-  color: #a1a1ad;
+  color: var(--muted);
 }
 .quick-views button[aria-pressed="true"] {
-  background: #272033;
-  color: #eadfff;
+  background: var(--panel);
+  color: var(--text);
   border-color: #49375f;
 }
 .density-controls {
@@ -1642,14 +1642,14 @@ td input[type="checkbox"] {
   padding: 5px 8px;
 }
 .density-controls button[aria-pressed="true"] {
-  background: #292932;
-  color: #fafafa;
+  background: var(--panel);
+  color: var(--text);
 }
 .filter-disclosure {
   margin: 0 0 18px;
   border: 1px solid var(--border);
   border-radius: 9px;
-  background: #111115;
+  background: var(--panel);
 }
 .filter-disclosure summary {
   display: flex;
@@ -1658,7 +1658,7 @@ td input[type="checkbox"] {
   cursor: pointer;
   padding: 11px 14px;
   font-size: 12px;
-  color: #b8b8c4;
+  color: var(--muted);
   list-style: none;
 }
 .filter-disclosure summary::-webkit-details-marker {
@@ -1668,7 +1668,7 @@ td input[type="checkbox"] {
   content: "+";
   margin-left: auto;
   font-size: 17px;
-  color: #aba2bb;
+  color: var(--muted);
 }
 .filter-disclosure[open] summary::after {
   content: "−";
@@ -1697,12 +1697,12 @@ td input[type="checkbox"] {
   display: none;
 }
 .app table thead th {
-  background: #18181e;
-  color: #a9a9b7;
+  background: var(--panel);
+  color: var(--muted);
   white-space: nowrap;
 }
 .app table tbody tr:hover {
-  background: #1b1922;
+  background: var(--panel);
 }
 .app table td {
   padding-top: 15px;
@@ -1726,7 +1726,7 @@ td input[type="checkbox"] {
   gap: 12px;
 }
 .app .lane {
-  background: #101014;
+  background: var(--panel);
   border-color: #24242d;
   padding: 10px;
   flex-basis: 270px;
@@ -1763,17 +1763,17 @@ td input[type="checkbox"] {
   font-size: 13px;
 }
 .app .lane-head h3 span {
-  background: #28242f;
+  background: var(--panel);
   border-radius: 5px;
   padding: 2px 6px;
-  color: #bdb6ca;
+  color: var(--muted);
 }
 .app .lane-head p {
   font-size: 11px;
   margin-top: 6px;
 }
 .app .deal-card {
-  background: #1a1a21;
+  background: var(--panel);
   border-color: #303039;
   border-radius: 8px;
   transition:
@@ -1798,7 +1798,7 @@ td input[type="checkbox"] {
   align-items: center;
   gap: 6px;
   font-size: 11px;
-  color: #b5b5c2;
+  color: var(--muted);
   margin-bottom: 9px;
 }
 .owner-dot {
@@ -1808,7 +1808,7 @@ td input[type="checkbox"] {
   height: 22px;
   border-radius: 50%;
   font-size: 8px;
-  background: #33273e;
+  background: var(--panel);
   color: #dfcef2;
 }
 .card-next {
@@ -1816,7 +1816,7 @@ td input[type="checkbox"] {
   align-items: center;
   gap: 6px;
   font-size: 10px;
-  color: #9d9daa;
+  color: var(--muted);
   border-top: 1px solid #303039;
   padding-top: 9px;
   margin: 10px 0;
@@ -1828,13 +1828,13 @@ td input[type="checkbox"] {
   font-size: 13px;
 }
 .app .deal-card select {
-  background: #15151a;
+  background: var(--panel);
   border-color: #32323c;
   font-size: 11px;
 }
 .app .drawer {
   width: 700px;
-  background: #131317;
+  background: var(--panel);
   box-shadow: -14px 0 50px #0004;
 }
 .app .drawer::backdrop {
@@ -1843,7 +1843,7 @@ td input[type="checkbox"] {
 }
 .app .drawer-head {
   padding: 18px 24px;
-  background: #18181d;
+  background: var(--panel);
 }
 .app .drawer-head h2 {
   font-size: 24px;
@@ -1918,8 +1918,8 @@ td input[type="checkbox"] {
   --accent-red: #f0a1ad;
 }
 .badge[data-stage="New"] {
-  color: #c2cadb;
-  background: #222735;
+  color: var(--muted);
+  background: var(--panel);
   border-color: #3e475d;
 }
 .badge[data-stage="Contacted"] {
@@ -1934,13 +1934,13 @@ td input[type="checkbox"] {
 }
 .badge[data-stage="Meeting Booked"] {
   color: var(--accent-pink);
-  background: #352039;
+  background: var(--panel);
   border-color: #62406a;
 }
 .badge[data-stage="Proposal"],
 .badge[data-stage="Negotiation"] {
   color: var(--accent-amber);
-  background: #342b1e;
+  background: var(--panel);
   border-color: #625135;
 }
 .badge[data-stage="Nurture"] {
@@ -2022,7 +2022,7 @@ td input[type="checkbox"] {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: #101015;
+  background: var(--panel);
   overflow: hidden;
 }
 .conversation-head {
@@ -2058,7 +2058,7 @@ td input[type="checkbox"] {
   align-self: center;
   text-align: center;
   font-size: 12px;
-  color: #aaa5b7;
+  color: var(--muted);
 }
 .chat-system p {
   margin: 6px 0;
@@ -2071,7 +2071,7 @@ td input[type="checkbox"] {
   border-radius: 10px;
   padding: 14px;
   font-size: 12px;
-  background: #211b29;
+  background: var(--panel);
 }
 .chat-legacy small {
   display: block;
@@ -2103,7 +2103,7 @@ td input[type="checkbox"] {
 }
 .chat-author time {
   margin-left: auto;
-  color: #a7a1b4;
+  color: var(--muted);
   font-size: 10px;
 }
 .chat-avatar {
@@ -2124,15 +2124,15 @@ td input[type="checkbox"] {
   padding: 13px 15px;
   border: 1px solid #34303d;
   border-radius: 0 12px 12px;
-  background: #1b1b24;
+  background: var(--panel);
 }
 .mine .chat-bubble {
-  background: #292036;
+  background: var(--panel);
   border-color: #4d3869;
   border-radius: 12px 0 12px 12px;
 }
 .chat-event .chat-bubble {
-  background: #17191f;
+  background: var(--panel);
   border-style: dashed;
 }
 .chat-event-title {
@@ -2155,7 +2155,7 @@ td input[type="checkbox"] {
   max-height: 300px;
   object-fit: contain;
   border-radius: 8px;
-  background: #09090d;
+  background: var(--panel);
 }
 .chat-attachment audio {
   width: 100%;
@@ -2163,7 +2163,7 @@ td input[type="checkbox"] {
 }
 .chat-attachment > span {
   font-size: 10px;
-  color: #aaa5b7;
+  color: var(--muted);
   overflow-wrap: anywhere;
 }
 .chat-attachment strong {
@@ -2172,7 +2172,7 @@ td input[type="checkbox"] {
 .chat-composer {
   padding: 16px 24px;
   border-top: 1px solid var(--border);
-  background: #16161d;
+  background: var(--panel);
   flex: none;
 }
 .chat-composer textarea {
@@ -2215,7 +2215,7 @@ td input[type="checkbox"] {
   gap: 5px;
   align-items: center;
   font-size: 11px;
-  background: #2f263d;
+  background: var(--panel);
   padding: 4px 7px;
   border-radius: 5px;
   overflow-wrap: anywhere;
