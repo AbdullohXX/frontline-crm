@@ -535,3 +535,13 @@ textarea::placeholder {
     grid-column: 1 / -1;
   }
 }
+/* Form actions belong after the fields, never over the scrollable form. */
+.app .lead-edit-pane .form-actions {
+  position: static;
+  bottom: auto;
+  background: transparent;
+  border-top: 1px solid var(--border);
+  padding: 16px 0 0;
+  margin-top: 20px;
+  flex-wrap: wrap;
+}
