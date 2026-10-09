@@ -545,3 +545,21 @@ textarea::placeholder {
   margin-top: 20px;
   flex-wrap: wrap;
 }
+/* A full-screen lead owns scrolling; the page behind it stays still. */
+html:has(.drawer[open]),
+body:has(.drawer[open]) {
+  overflow: hidden;
+}
+.app .drawer[open] {
+  overscroll-behavior: none;
+}
+.app .lead-edit-pane,
+.app .chat-log {
+  overscroll-behavior: contain;
+}
+@media (min-width: 901px) {
+  .app .drawer-body.lead-full-layout {
+    overflow: hidden;
+    grid-template-rows: minmax(0, 1fr);
+  }
+}
