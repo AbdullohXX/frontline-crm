@@ -1024,7 +1024,7 @@ export default function Workspace() {
             <b>{nav.find((n) => n[0] === view)?.[1]}</b>
           </span>
           <div className="flex">
-            <span className="sync">
+            <span className="sync" role="status" aria-live="polite">
               <i />
               {boot.demo
                 ? "LOCAL PREVIEW"
@@ -1037,7 +1037,10 @@ export default function Workspace() {
               disabled={loading}
               aria-label="Refresh workspace"
             >
-              <RefreshCw size={15} />
+              <RefreshCw
+                size={15}
+                className={loading ? "refreshing-icon" : undefined}
+              />
               <span>Refresh</span>
             </button>
           </div>
@@ -1049,7 +1052,7 @@ export default function Workspace() {
               Supabase is connected.
             </div>
           )}
-          <div className="page-head">
+          <div className="page-head" key={view}>
             <div>
               <div className="eyebrow">{titles[view][0]}</div>
               <h1>{titles[view][1]}</h1>
@@ -1094,11 +1097,6 @@ export default function Workspace() {
               Team phone: {boot.teamPhone || "+19295773302"}
             </a>
           </div>
-          {loading && boot && (
-            <div className="refresh-indicator" role="status">
-              Refreshing records…
-            </div>
-          )}
           {report && ["day", "pipeline", "leads"].includes(view) && (
             <Metrics
               items={

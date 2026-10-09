@@ -1,0 +1,469 @@
+/* A single finishing layer for the Frontline workspace. */
+:root {
+  --bg: #0b0e16;
+  --panel: #151a26;
+  --border: #2b3345;
+  --muted: #a3adc1;
+  --text: #f0f3fb;
+  --purple: #b4a0ff;
+}
+body {
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  background:
+    radial-gradient(ellipse at 85% 0%, #25203c66, transparent 55%), var(--bg);
+}
+button,
+.button,
+input,
+select,
+textarea,
+.filter-disclosure summary {
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+button,
+.button {
+  font-weight: 600;
+  font-size: 12px;
+  border-radius: 10px;
+}
+button:not(:disabled):active,
+.button:active {
+  box-shadow: inset 0 2px 5px #0003;
+}
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #b4a0ff;
+  outline-offset: 3px;
+}
+input,
+select,
+textarea {
+  border-radius: 10px;
+  background-color: #101521;
+  color: var(--text);
+}
+input::placeholder,
+textarea::placeholder {
+  color: #8e9bb3;
+  opacity: 1;
+}
+.app input:focus,
+.app select:focus,
+.app textarea:focus {
+  outline: 2px solid #b4a0ff88;
+  outline-offset: 1px;
+  border-color: #a58ef0;
+}
+.app .sidebar {
+  background: linear-gradient(165deg, #171c2a, #10141f 60%);
+  border-right-color: #293043;
+}
+.wordmark {
+  letter-spacing: -1.1px;
+  font-weight: 800;
+}
+.wordmark small {
+  letter-spacing: 1.15px;
+  color: #9fabc1;
+  margin-top: 8px;
+}
+.app .sidebar nav button {
+  min-height: 45px;
+  border-radius: 11px;
+  font-size: 13px;
+  color: #b6c1d6;
+  margin-bottom: 5px;
+}
+.app .sidebar nav button:hover {
+  background: #252b3e;
+  color: #fff;
+}
+.app .sidebar nav button.active {
+  background: linear-gradient(100deg, #49376a, #302a47);
+  color: #fff;
+  box-shadow:
+    inset 3px 0 #c2afff,
+    0 3px 12px #0002;
+}
+.sidebar nav button.active svg {
+  color: #d4c7ff;
+}
+.app .topbar {
+  background: #101521;
+  border-bottom-color: #283044;
+  font-size: 12px;
+}
+.topbar b {
+  color: #e0e7f7;
+  font-weight: 600;
+}
+.topbar .sync {
+  color: #afbad0;
+  letter-spacing: 0.2px;
+}
+.topbar .sync i {
+  width: 6px;
+  height: 6px;
+  box-shadow: 0 0 0 3px #80c4a61a;
+}
+.app .content {
+  padding-top: 30px;
+}
+.app .page-head {
+  margin-bottom: 24px;
+  animation: workspace-arrive 180ms ease-out;
+}
+.app .page-head h1 {
+  font-size: clamp(27px, 2.2vw, 36px);
+  letter-spacing: -1.1px;
+  font-weight: 800;
+}
+.app .page-head .eyebrow {
+  color: #b9a9ee;
+  font-weight: 700;
+  letter-spacing: 1.6px;
+}
+.app .page-head p {
+  color: #adb8ce;
+  font-size: 13px;
+}
+.primary,
+.purple {
+  background: linear-gradient(120deg, #bca8ff, #91b9ff);
+  color: #15152b;
+  border-color: #b9a9ef;
+  box-shadow: 0 3px 12px #a38aed20;
+  font-weight: 800;
+}
+.primary:hover,
+.purple:hover {
+  background: linear-gradient(120deg, #cfbfff, #b0ceff);
+  color: #15152b;
+  border-color: #cfbfff;
+}
+.app .company-strip {
+  padding: 14px 18px;
+  border: 1px solid #354159;
+  border-radius: 12px;
+  background: linear-gradient(100deg, #192438, #1b1b2d);
+  color: #e0e9fb;
+  font-size: clamp(16px, 1.2vw, 18px);
+  font-weight: 650;
+}
+.company-strip a {
+  color: #b1d4ff;
+  text-underline-offset: 4px;
+}
+.company-strip a:hover {
+  color: #d8eaff;
+}
+.app .metrics {
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  overflow: visible;
+}
+.app .metric {
+  background: linear-gradient(140deg, #1a2234, #141a28);
+  border: 1px solid #35445f;
+  border-radius: 14px;
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.app .metric + .metric {
+  border-left: 1px solid #35445f;
+}
+.app .metric::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 20px;
+  right: 20px;
+  height: 2px;
+  background: var(--accent-blue);
+}
+.app .metric:nth-child(2)::before {
+  background: var(--purple);
+}
+.app .metric:nth-child(3)::before {
+  background: var(--accent-teal);
+}
+.app .metric:nth-child(4)::before {
+  background: var(--accent-amber);
+}
+.app .metric strong {
+  font-size: clamp(25px, 2vw, 32px);
+  letter-spacing: -1px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.app .metric .eyebrow {
+  color: #b9c4d9;
+  font-weight: 650;
+  letter-spacing: 1px;
+}
+.app .panel {
+  background: linear-gradient(145deg, #161c29, #131925);
+  border-color: #303a50;
+  border-radius: 14px;
+  box-shadow: 0 6px 22px #00000014;
+}
+.app .panel-head {
+  padding: 18px 20px;
+  border-bottom-color: #2b3448;
+}
+.app .panel-head h3 {
+  font-weight: 750;
+  letter-spacing: -0.25px;
+}
+.app table thead th {
+  background: #1e2738;
+  color: #bdcbe3;
+  font-weight: 650;
+  letter-spacing: 1px;
+  font-size: 10px;
+}
+.app table td {
+  border-bottom-color: #293247;
+}
+.app table tbody tr {
+  transition: background-color 120ms ease;
+}
+.app table tbody tr:hover {
+  background: #242b40;
+}
+.app .text-button {
+  color: #edf2ff;
+  font-weight: 700;
+}
+.app .text-button:hover {
+  color: #c7b7ff;
+}
+.app .task-row {
+  border-bottom-color: #293247;
+}
+.app .task-row:hover {
+  background: #20283b;
+}
+.app .filter-disclosure {
+  background: #151c2a;
+  border-color: #303d54;
+  border-radius: 12px;
+}
+.filter-disclosure summary {
+  color: #b9c6dd;
+}
+.quick-views button,
+.density-controls button {
+  color: #b0bfd5;
+}
+.quick-views button[aria-pressed="true"] {
+  background: #342a50;
+  border-color: #68558c;
+  color: #eee5ff;
+}
+.density-controls {
+  background: #121928;
+}
+.density-controls button[aria-pressed="true"] {
+  background: #303c53;
+  color: #fff;
+}
+.app .board {
+  gap: 16px;
+}
+.app .lane {
+  background: #121a28;
+  border-color: #2d394f;
+  border-top-color: var(--stage-color, #90b4ff);
+  border-radius: 14px;
+  padding: 12px;
+}
+.app .lane-head h3 {
+  font-weight: 750;
+  font-size: 13px;
+}
+.app .lane-head h3 span {
+  border-radius: 7px;
+  background: #263149;
+}
+.app .deal-card {
+  background: linear-gradient(135deg, #202c40, #1b2233);
+  border-color: #394760;
+  border-radius: 12px;
+  padding: 16px;
+}
+.app .deal-card:hover {
+  border-color: #a590dd;
+  box-shadow: 0 5px 16px #0003;
+}
+.app .deal-card[aria-busy="true"] {
+  border-color: #b4a0ff;
+  box-shadow: inset 3px 0 #b4a0ff;
+}
+.app .deal-card > .text-button {
+  font-size: 14px;
+  font-weight: 750;
+}
+.app .deal-card p {
+  font-size: 12px;
+  color: #b7c4dc;
+}
+.card-owner {
+  color: #c0cee3;
+}
+.app .drawer {
+  background: #111724;
+}
+.app .drawer[open] {
+  animation: workspace-arrive 180ms ease-out;
+}
+.app .drawer-head {
+  background: #192234;
+  border-bottom-color: #36445e;
+}
+.app .drawer-head h2 {
+  font-weight: 800;
+  letter-spacing: -0.8px;
+}
+.app .drawer-tabs button.active {
+  background: #3b2e59;
+  color: #e7dcff;
+  border-color: #8270af;
+}
+.lead-conversation {
+  background: #131b2a;
+}
+.conversation-head,
+.chat-composer {
+  background: #192234;
+  border-color: #33425c;
+}
+.chat-bubble {
+  background: #202d42;
+  border-color: #3b4c67;
+  border-radius: 16px;
+}
+.chat-message.mine .chat-bubble {
+  background: #342d52;
+  border-color: #68578d;
+}
+.chat-avatar {
+  background: #3d345d;
+  color: #eadfff;
+}
+.chat-author {
+  color: #c7d4eb;
+}
+.chat-author time {
+  color: #a3b2cd;
+}
+.quo-charts section,
+.chart-card {
+  background: #151e2e;
+  border-color: #33425b;
+}
+.quo-kpis {
+  font-variant-numeric: tabular-nums;
+}
+.quo-lead-tools {
+  background: #182c3266;
+  border-color: #335a63;
+  border-radius: 12px;
+}
+.refreshing-icon {
+  animation: workspace-spin 900ms linear infinite;
+}
+@keyframes workspace-arrive {
+  from {
+    opacity: 0.7;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes workspace-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 700px) {
+  .app .sidebar {
+    padding: 18px 16px 12px;
+  }
+  .app .sidebar nav {
+    margin-top: 14px;
+  }
+  .app .sidebar nav button {
+    min-height: 42px;
+    font-size: 12px;
+  }
+  .app .content {
+    padding: 22px 16px;
+  }
+  .app .company-strip {
+    padding: 12px 14px;
+    gap: 8px;
+  }
+  .app .company-strip span,
+  .app .company-strip a {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .app .metric {
+    padding: 16px;
+  }
+  .app .metric:nth-child(3) {
+    border-left: 1px solid #35445f;
+  }
+  .app .metric:nth-child(n + 3) {
+    border-top: 1px solid #35445f;
+  }
+  .app .page-head h1 {
+    font-size: 28px;
+  }
+  .app .panel-head {
+    padding: 16px;
+  }
+  .topbar .sync {
+    display: flex;
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+/* Keep the mobile lead form from shrinking behind the conversation pane. */
+.chat-composer textarea {
+  width: 100%;
+}
+@media (max-width: 900px) {
+  .lead-full-layout .lead-edit-pane {
+    flex: none;
+    width: 100%;
+    overflow: visible;
+  }
+}
+@media (max-width: 700px) {
+  .lead-full-layout .lead-edit-pane {
+    padding: 20px 16px;
+  }
+  .chat-compose-actions button {
+    min-height: 42px;
+  }
+}
