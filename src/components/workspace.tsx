@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   LayoutDashboard,
@@ -885,7 +886,10 @@ export default function Workspace() {
       <main className="login">
         <div className="login-card">
           <div className="wordmark">
-            FRONTLINE<span>·</span>
+            <div className="brand-identity">
+            <Image src="/branding/frontline-logo.jpg" alt="" width={440} height={427} className="brand-logo" />
+            <strong>FRONTLINE<span>·</span></strong>
+          </div>
           </div>
           <div className="eyebrow">CUSTOMER OPERATIONS</div>
           <h1>
@@ -962,7 +966,10 @@ export default function Workspace() {
     <div className="app" data-density={density}>
       <aside className="sidebar">
         <div className="wordmark">
-          FRONTLINE<span>·</span>
+          <div className="brand-identity">
+            <Image src="/branding/frontline-logo.jpg" alt="" width={440} height={427} className="brand-logo" />
+            <strong>FRONTLINE<span>·</span></strong>
+          </div>
           <small>CUSTOMER OPERATIONS</small>
         </div>
         <div className="nav-label">WORKSPACE</div>

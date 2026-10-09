@@ -563,3 +563,13 @@ body:has(.drawer[open]) {
     grid-template-rows: minmax(0, 1fr);
   }
 }
+
+/* Original company artwork stays crisp on both workspace themes. */
+.brand-identity { display: flex; align-items: center; gap: 10px; }
+.brand-logo { width: 42px; height: 42px; object-fit: contain; flex-shrink: 0; border-radius: 10px; background: #111; }
+.brand-identity strong { font: inherit; }
+.brand-identity strong > span { color: var(--purple); }
+.login-card .brand-logo { width: 56px; height: 56px; }
+@media (max-width: 700px) {
+  .brand-logo { width: 32px; height: 32px; border-radius: 8px; }
+}
