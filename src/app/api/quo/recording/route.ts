@@ -2,6 +2,7 @@ import { authorized, localDemo } from "@/lib/auth";
 import { failure, json } from "@/lib/http";
 import { quoPages, quoRequest } from "@/lib/quo";
 import { z } from "zod";
+import { quoCallDetailsPath } from "@/lib/quo-details";
 export async function GET(request: Request) {
   try {
     if (localDemo())
@@ -41,7 +42,7 @@ export async function GET(request: Request) {
       return json({ error: "Call unavailable" }, 404);
     if (q.get("mode") === "details") {
       const call = await quoRequest(
-        "/calls/" + id + "?include=summary,voicemail",
+        quoCallDetailsPath(id),
       );
       let transcripts: any[] = [];
       let transcriptError = "";

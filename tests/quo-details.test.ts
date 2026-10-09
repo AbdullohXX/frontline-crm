@@ -16,3 +16,10 @@ test("new webhook summary replaces old content and empty refresh preserves trans
   assert.deepEqual(result.transcripts, previous.transcripts);
   assert.deepEqual(result.recordings, [{ id: "new" }]);
 });
+
+test("Quo call details request uses separate include values for summary and voicemail", async () => {
+  const { quoCallDetailsPath } = await import("../src/lib/quo-details.js");
+  const url = new URL(quoCallDetailsPath("ACtest"), "https://api.quo.com");
+  assert.equal(url.pathname, "/calls/ACtest");
+  assert.deepEqual(url.searchParams.getAll("include"), ["summary", "voicemail"]);
+});
