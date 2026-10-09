@@ -253,9 +253,7 @@ export default function QuoDashboard({ boot }: { boot: Bootstrap }) {
           </div>
           <a
             className="button purple"
-            href="https://my.quo.com/"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="quo://"
           >
             Open Quo to call
           </a>

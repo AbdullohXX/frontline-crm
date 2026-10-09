@@ -1773,9 +1773,7 @@ export default function Workspace() {
               </div>
               <div className="flex wrap phone-links">
                 <a
-                  href="https://my.quo.com/"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="quo://"
                   className="button purple"
                 >
                   Open Quo <ArrowUpRight size={16} />
@@ -1837,9 +1835,7 @@ export default function Workspace() {
                           </button>
                           <a
                             className="button purple"
-                            href="https://my.quo.com/"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            href="quo://"
                           >
                             Open Quo <ArrowUpRight size={15} />
                           </a>
@@ -2175,24 +2171,7 @@ export default function Workspace() {
                 </a>
               )}
               {selected.phone && (
-                <button
-                  onClick={() => {
-                    if (dirty) {
-                      setDrawerError(
-                        "Save or discard changes before opening the calling queue.",
-                      );
-                      return;
-                    }
-                    drawer.current?.close();
-                    navigate("phone");
-                    setDue("all");
-                    setSearch(selected.company);
-                    setScope("all");
-                    setPhoneId(selected.id);
-                  }}
-                >
-                  Quo call workflow <Phone size={14} />
-                </button>
+                <a className="button" href="quo://">Open Quo app <Phone size={14} /></a>
               )}
             </div>
           )}

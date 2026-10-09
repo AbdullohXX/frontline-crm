@@ -98,7 +98,7 @@ export default function QuoLeadTools({
       <summary>Quo Phone · calls & SMS</summary>
       <p>
         Place calls in{" "}
-        <a href="https://my.quo.com/" target="_blank" rel="noopener noreferrer">
+        <a href="quo://">
           Quo
         </a>
         . Calls and replies appear in this conversation automatically.
