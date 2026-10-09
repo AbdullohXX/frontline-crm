@@ -194,7 +194,7 @@ p {
 .nav-count {
   margin-left: auto;
   font-size: 11px;
-  color: #c4b5fd;
+  color: var(--purple);
 }
 .sidebar-footer {
   display: flex;

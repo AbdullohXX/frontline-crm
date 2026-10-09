@@ -513,3 +513,12 @@
   --heat-high-bg: #7953b9;
   --heat-high-ink: #fff;
 }
+:root[data-theme="light"] .quiet-card > svg {
+  color: var(--purple);
+}
+:root[data-theme="light"] .row-shortcuts a {
+  color: #315f9e;
+}
+:root[data-theme="light"] .activity-card {
+  border-color: var(--border);
+}
