@@ -117,15 +117,9 @@ export default function Productivity({
         <button disabled={busy} onClick={() => action("/api/gmail/sync")}>
           Sync my sent emails
         </button>
-        {boot.member.role === "Admin" && (
-          <button disabled={busy} onClick={() => action("/api/prospecting")}>
-            Fetch new Explee prospects
-          </button>
-        )}
       </div>
       <p className="fine">
-        Gmail imports subject, recipients and sent time only. Prospecting
-        imports the existing Explee feed; it does not launch a new AI campaign.
+        Gmail imports subject, recipients and sent time only.
       </p>
       {message && <p role="status">{message}</p>}
       <div className="productivity-grid">

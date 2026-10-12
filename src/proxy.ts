@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
   if (
-    ["/api/cron/explee", "/api/cron/quo", "/api/quo/webhook"].includes(
+    ["/api/cron/quo", "/api/quo/webhook"].includes(
       request.nextUrl.pathname,
     )
   )
