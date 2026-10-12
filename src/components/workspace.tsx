@@ -891,9 +891,17 @@ export default function Workspace() {
         <div className="login-card">
           <div className="wordmark">
             <div className="brand-identity">
-            <Image src="/branding/frontline-logo.jpg" alt="" width={440} height={427} className="brand-logo" />
-            <strong>FRONTLINE<span>·</span></strong>
-          </div>
+              <Image
+                src="/branding/frontline-logo.jpg"
+                alt=""
+                width={440}
+                height={427}
+                className="brand-logo"
+              />
+              <strong>
+                FRONTLINE<span>·</span>
+              </strong>
+            </div>
           </div>
           <div className="eyebrow">CUSTOMER OPERATIONS</div>
           <h1>
@@ -972,8 +980,16 @@ export default function Workspace() {
       <aside className="sidebar">
         <div className="wordmark">
           <div className="brand-identity">
-            <Image src="/branding/frontline-logo.jpg" alt="" width={440} height={427} className="brand-logo" />
-            <strong>FRONTLINE<span>·</span></strong>
+            <Image
+              src="/branding/frontline-logo.jpg"
+              alt=""
+              width={440}
+              height={427}
+              className="brand-logo"
+            />
+            <strong>
+              FRONTLINE<span>·</span>
+            </strong>
           </div>
           <small>CUSTOMER OPERATIONS</small>
         </div>
@@ -1759,6 +1775,16 @@ export default function Workspace() {
             <>
               <QuoAnalytics boot={boot} />
               <AdvancedAnalytics
+                onLead={async (id) => {
+                  try {
+                    const result = await api<{ lead: Lead }>(
+                      "/api/conversation?lead=" + encodeURIComponent(id),
+                    );
+                    openLead(result.lead, "activity");
+                  } catch (e) {
+                    setError((e as Error).message);
+                  }
+                }}
                 boot={boot}
                 onStage={(label) => {
                   navigate("leads");
@@ -1779,10 +1805,7 @@ export default function Workspace() {
                 here.
               </div>
               <div className="flex wrap phone-links">
-                <a
-                  href="quo://"
-                  className="button purple"
-                >
+                <a href="quo://" className="button purple">
                   Open Quo <ArrowUpRight size={16} />
                 </a>
                 <button onClick={() => setSkips([])}>
@@ -1841,10 +1864,7 @@ export default function Workspace() {
                             <Copy size={15} />
                             Copy number
                           </button>
-                          <a
-                            className="button purple"
-                            href="quo://"
-                          >
+                          <a className="button purple" href="quo://">
                             Open Quo <ArrowUpRight size={15} />
                           </a>
                           <button
@@ -1918,7 +1938,8 @@ export default function Workspace() {
                         <strong>{m.display_name}</strong>
                         <small>{m.email}</small>
                         <small>
-                          {m.role} · {m.job_role || "Other"} · {m.active ? "Active" : "Disabled"}
+                          {m.role} · {m.job_role || "Other"} ·{" "}
+                          {m.active ? "Active" : "Disabled"}
                         </small>
                       </div>
                       <button onClick={() => setTeamDraft({ ...m })}>
@@ -1966,7 +1987,15 @@ export default function Workspace() {
                     </select>
                   </Field>
                   <Field label="Job function">
-                    <select value={teamDraft.job_role || "Other"} onChange={(e) => setTeamDraft({...teamDraft,job_role:e.target.value as Member["job_role"]})}>
+                    <select
+                      value={teamDraft.job_role || "Other"}
+                      onChange={(e) =>
+                        setTeamDraft({
+                          ...teamDraft,
+                          job_role: e.target.value as Member["job_role"],
+                        })
+                      }
+                    >
                       <option value="Other">Other / Administration</option>
                       <option value="Lead generator">Lead generator</option>
                       <option value="Sales rep">Sales rep</option>
@@ -2186,12 +2215,16 @@ export default function Workspace() {
                 </a>
               )}
               {selected.phone && (
-                <a className="button" href="quo://">Open Quo app <Phone size={14} /></a>
+                <a className="button" href="quo://">
+                  Open Quo app <Phone size={14} />
+                </a>
               )}
             </div>
           )}
           {selected && <CallingSession boot={boot} lead={selected} />}
-          {selected && <CallScript lead={selected} agent={boot.member.display_name} />}
+          {selected && (
+            <CallScript lead={selected} agent={boot.member.display_name} />
+          )}
           <div className="drawer-tabs">
             <button
               className={drawerTab === "details" ? "active" : ""}

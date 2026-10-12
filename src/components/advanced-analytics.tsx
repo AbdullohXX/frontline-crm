@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Productivity from "./productivity";
 import SalesKpis from "./sales-kpis";
+import SalesAdvisor from "./sales-advisor";
 import { STAGES, type Bootstrap } from "@/lib/types";
 import type { AdvancedReport, Slice } from "@/lib/analytics";
 const colors = [
@@ -304,9 +305,11 @@ function Trend({
 export default function AdvancedAnalytics({
   boot,
   onStage,
+  onLead,
 }: {
   boot: Bootstrap;
   onStage: (stage: string) => void;
+  onLead: (id: string) => void;
 }) {
   const [from, setFrom] = useState(shift(boot.today, -29)),
     [to, setTo] = useState(boot.today),
@@ -365,6 +368,13 @@ export default function AdvancedAnalytics({
   };
   return (
     <div className="advanced-analytics">
+      <SalesAdvisor
+        from={from}
+        to={to}
+        owner={owner}
+        source={source}
+        onLead={onLead}
+      />
       <div className="analytics-controls filters">
         <label>
           <span>Activity from</span>

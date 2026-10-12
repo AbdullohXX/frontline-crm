@@ -590,3 +590,8 @@ body:has(.drawer[open]) {
 .kpi-outcome { display: block; padding: 3px 0; }
 .sales-call-list { max-height: 450px; overflow-y: auto; display: grid; gap: 10px; }
 .sales-call-list article { padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
+.sales-advisor { margin-top: 18px; }
+.advisor-coverage { padding: 12px 16px; margin: 16px 0; border: 1px solid var(--border); border-radius: 10px; }
+.sales-advisor details { margin-top: 12px; }
+.sales-advisor summary { cursor: pointer; }
+.sales-advisor article p { overflow-wrap: anywhere; }
