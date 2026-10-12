@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Productivity from "./productivity";
+import SalesKpis from "./sales-kpis";
 import { STAGES, type Bootstrap } from "@/lib/types";
 import type { AdvancedReport, Slice } from "@/lib/analytics";
 const colors = [
@@ -656,6 +657,7 @@ export default function AdvancedAnalytics({
             {tab === "Activity & team" && (
               <>
                 <div className="insight-wide">
+                  <SalesKpis boot={boot} />
                   <Productivity boot={boot} report={r} from={from} to={to} />
                 </div>
                 <Card

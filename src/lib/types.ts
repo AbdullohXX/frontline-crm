@@ -25,6 +25,7 @@ export type Member = {
   role: "Admin" | "Agent";
   active: boolean;
   aliases: string[];
+  job_role?: "Lead generator" | "Sales rep" | "Other";
 };
 export type Lead = {
   id: string;

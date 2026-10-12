@@ -19,6 +19,7 @@ export const demoBootstrap: Bootstrap = {
   member: {
     email: "preview@frontline-x.com",
     display_name: "Alex Morgan",
+      job_role: "Lead generator",
     role: "Admin",
     active: true,
     aliases: [],
@@ -27,6 +28,7 @@ export const demoBootstrap: Bootstrap = {
     {
       email: "preview@frontline-x.com",
       display_name: "Alex Morgan",
+      job_role: "Lead generator",
       role: "Admin",
       active: true,
       aliases: [],
@@ -34,6 +36,7 @@ export const demoBootstrap: Bootstrap = {
     {
       email: "sam@frontline-x.com",
       display_name: "Sam Rivers",
+      job_role: "Sales rep",
       role: "Agent",
       active: true,
       aliases: [],

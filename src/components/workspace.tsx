@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import SalesKpis, { CallingSession } from "./sales-kpis";
 import CallScript from "./call-script";
 import { ActiveUsage } from "./productivity";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -1769,6 +1770,8 @@ export default function Workspace() {
           )}
           {view === "phone" && (
             <>
+              <CallingSession boot={boot} />
+              <SalesKpis boot={boot} />
               <QuoDashboard boot={boot} />
               <div className="notice">
                 Use the calling queue below to work through your leads. Quo
@@ -1833,6 +1836,7 @@ export default function Workspace() {
                           {phoneLead.next_follow_up || "Unscheduled"}
                         </p>
                         <div className="flex wrap">
+                          <CallingSession boot={boot} lead={phoneLead} />
                           <button onClick={() => copyNumber(phoneLead)}>
                             <Copy size={15} />
                             Copy number
@@ -2179,6 +2183,7 @@ export default function Workspace() {
               )}
             </div>
           )}
+          {selected && <CallingSession boot={boot} lead={selected} />}
           {selected && <CallScript lead={selected} agent={boot.member.display_name} />}
           <div className="drawer-tabs">
             <button

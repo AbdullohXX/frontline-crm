@@ -585,3 +585,8 @@ body:has(.drawer[open]) {
 .call-script summary { cursor: pointer; font-weight: 700; }
 .call-script p { max-width: 900px; }
 .call-script[open] { max-height: 260px; overflow-y: auto; } .productivity-grid progress { width: 100%; accent-color: var(--purple); }
+.calling-session { padding: 12px 20px; border: 1px solid var(--border); border-radius: 10px; background: var(--panel); font-size: 12px; }
+.calling-session p { margin: 6px 0; }
+.kpi-outcome { display: block; padding: 3px 0; }
+.sales-call-list { max-height: 450px; overflow-y: auto; display: grid; gap: 10px; }
+.sales-call-list article { padding: 12px; border: 1px solid var(--border); border-radius: 10px; }
