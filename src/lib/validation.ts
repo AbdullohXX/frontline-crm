@@ -80,6 +80,7 @@ export const memberSchema = z.object({
     ),
   display_name: z.string().trim().min(1).max(80),
   role: z.enum(["Admin", "Agent"]),
+  job_role: z.enum(["Lead generator", "Sales rep", "Other"]).optional(),
   active: z.boolean(),
   aliases: z
     .array(z.string().trim().toLowerCase().max(200))

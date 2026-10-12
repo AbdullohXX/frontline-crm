@@ -76,7 +76,9 @@ export function CallingSession({
     return null;
   return (
     <details className="calling-session">
-      <summary>Your calling session · {session ? "Active" : "Start session"}</summary>
+      <summary>
+        Your calling session · {session ? "Active" : "Start session"}
+      </summary>
       <p>
         {session
           ? `Active until ${new Date(session.expires_at).toLocaleTimeString()}`
@@ -126,20 +128,20 @@ export default function SalesKpis({ boot }: { boot: Bootstrap }) {
     }),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
-  const sequence=useRef(0);
+  const sequence = useRef(0);
   async function load() {
-    const requestId=++sequence.current;
+    const requestId = ++sequence.current;
     try {
       const r = await fetch(
         "/api/sales-calls?" + new URLSearchParams({ from, to }),
       );
       const d = await r.json();
       if (!r.ok) throw Error(d.error);
-      if(requestId!==sequence.current)return;
+      if (requestId !== sequence.current) return;
       setData(d);
       setError("");
     } catch (e) {
-      if(requestId===sequence.current)setError((e as Error).message);
+      if (requestId === sequence.current) setError((e as Error).message);
     }
   }
   useEffect(() => {
@@ -159,14 +161,44 @@ export default function SalesKpis({ boot }: { boot: Bootstrap }) {
       setBusy(false);
     }
   }
-  const reps = boot.members.filter((m) => (m as any).job_role === "Sales rep");
+  const [selectedUser, setSelectedUser] = useState("");
+  const reps = boot.members.filter(
+    (m) =>
+      (m as any).job_role === "Sales rep" &&
+      m.email === selectedUser &&
+      m.active,
+  );
   const generators = boot.members.filter(
-    (m) => (m as any).job_role === "Lead generator",
+    (m) =>
+      (m as any).job_role === "Lead generator" &&
+      m.email === selectedUser &&
+      m.active,
   );
   const unassigned = data.calls.filter((c: any) => !c.rep);
   return (
     <section className="productivity-panel">
-      <h2>Sales & lead-generation KPIs</h2>
+      <h2>Team performance</h2>
+      <label>
+        Team member
+        <select
+          value={selectedUser}
+          onChange={(e) => setSelectedUser(e.target.value)}
+        >
+          <option value="">Select a team member…</option>
+          {boot.members
+            .filter((m) => m.active && m.job_role !== "Other" && m.job_role)
+            .map((m) => (
+              <option key={m.email} value={m.email}>
+                {m.display_name} · {m.job_role}
+              </option>
+            ))}
+        </select>
+      </label>
+      {!selectedUser && (
+        <p className="muted">
+          Choose a team member to see their role-specific performance.
+        </p>
+      )}
       <p className="muted">
         Shared Quo account · credit comes from CRM call registrations or admin
         review. Answered includes voicemail; human contact requires rep
@@ -231,12 +263,9 @@ export default function SalesKpis({ boot }: { boot: Bootstrap }) {
           const count = (outcome: string) =>
             calls.filter((c: any) => c.outcome === outcome).length;
           const humans = calls.filter((c: any) =>
-            [
-              "Spoke to person",
-
-              "Meeting booked",
-              "Qualified",
-            ].includes(c.outcome),
+            ["Spoke to person", "Meeting booked", "Qualified"].includes(
+              c.outcome,
+            ),
           ).length;
           return (
             <article key={m.email}>
@@ -285,7 +314,7 @@ export default function SalesKpis({ boot }: { boot: Bootstrap }) {
           );
         })}
       </div>
-      <h3>Lead generators</h3>
+      {generators.length > 0 && <h3>Lead generation</h3>}
       <div className="productivity-grid">
         {generators.map((m) => {
           const leads = data.generators.filter(
@@ -382,11 +411,13 @@ export default function SalesKpis({ boot }: { boot: Bootstrap }) {
                 }}
               >
                 <option value="">Admin: assign confirmed caller…</option>
-                {reps.map((m) => (
-                  <option key={m.email} value={m.email}>
-                    {m.display_name}
-                  </option>
-                ))}
+                {boot.members
+                  .filter((m) => m.active && m.job_role === "Sales rep")
+                  .map((m) => (
+                    <option key={m.email} value={m.email}>
+                      {m.display_name}
+                    </option>
+                  ))}
               </select>
             )}
             {!c.lead_id && (

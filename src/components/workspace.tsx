@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import SalesKpis, { CallingSession } from "./sales-kpis";
+import { CallingSession } from "./sales-kpis";
 import CallScript from "./call-script";
 import { ActiveUsage } from "./productivity";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -1771,7 +1771,7 @@ export default function Workspace() {
           {view === "phone" && (
             <>
               <CallingSession boot={boot} />
-              <SalesKpis boot={boot} />
+
               <QuoDashboard boot={boot} />
               <div className="notice">
                 Use the calling queue below to work through your leads. Quo
@@ -1918,7 +1918,7 @@ export default function Workspace() {
                         <strong>{m.display_name}</strong>
                         <small>{m.email}</small>
                         <small>
-                          {m.role} · {m.active ? "Active" : "Disabled"}
+                          {m.role} · {m.job_role || "Other"} · {m.active ? "Active" : "Disabled"}
                         </small>
                       </div>
                       <button onClick={() => setTeamDraft({ ...m })}>
@@ -1951,7 +1951,7 @@ export default function Workspace() {
                       }
                     />
                   </Field>
-                  <Field label="Role">
+                  <Field label="Access level">
                     <select
                       value={teamDraft.role}
                       onChange={(e) =>
@@ -1963,6 +1963,13 @@ export default function Workspace() {
                     >
                       <option>Agent</option>
                       <option>Admin</option>
+                    </select>
+                  </Field>
+                  <Field label="Job function">
+                    <select value={teamDraft.job_role || "Other"} onChange={(e) => setTeamDraft({...teamDraft,job_role:e.target.value as Member["job_role"]})}>
+                      <option value="Other">Other / Administration</option>
+                      <option value="Lead generator">Lead generator</option>
+                      <option value="Sales rep">Sales rep</option>
                     </select>
                   </Field>
                   <Field label="Legacy owner aliases (comma separated)" full>
