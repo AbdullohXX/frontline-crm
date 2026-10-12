@@ -154,7 +154,7 @@ export default function SalesKpis({ boot }: { boot: Bootstrap }) {
       await load();
       window.dispatchEvent(new Event("quo-refreshed"));
     } catch (e) {
-      if(requestId===sequence.current)setError((e as Error).message);
+      setError((e as Error).message);
     } finally {
       setBusy(false);
     }
