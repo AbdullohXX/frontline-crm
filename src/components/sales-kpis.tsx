@@ -233,7 +233,7 @@ export default function SalesKpis({ boot }: { boot: Bootstrap }) {
           const humans = calls.filter((c: any) =>
             [
               "Spoke to person",
-              "Follow-up required",
+
               "Meeting booked",
               "Qualified",
             ].includes(c.outcome),
