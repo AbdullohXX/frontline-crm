@@ -15,7 +15,7 @@ test("additional contacts preserve audit, reject stale writes and keep ambiguous
     "20261006205049_shared_team_lead_access.sql",
     "20261009152106_quo_communications.sql",
     "20261009154356_quo_explicit_sms_target.sql",
-    "20261015202848_lead_contact_cards.sql",
+    "20261015204110_lead_contact_cards.sql",
   ])
     await db.exec(readFileSync("supabase/migrations/" + file, "utf8"));
   await db.exec(
@@ -153,3 +153,4 @@ test("additional contacts preserve audit, reject stale writes and keep ambiguous
   );
   await db.close();
 });
+
