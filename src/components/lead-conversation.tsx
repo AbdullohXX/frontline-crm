@@ -1,5 +1,11 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { Paperclip, Send, RefreshCw, X, MessageSquare } from "lucide-react";
 import QuoActivity from "./quo-activity";
 import QuoLeadTools from "./quo-lead-tools";
@@ -24,7 +30,13 @@ export default function LeadConversation({
   onSaved,
   onDraftChange,
   onBusyChange,
+  activityForm,
+  composerMode,
+  onComposerMode,
 }: {
+  activityForm?: ReactNode;
+  composerMode: "note" | "activity" | "sms";
+  onComposerMode: (mode: "note" | "activity" | "sms") => void;
   lead: Lead;
   boot: Bootstrap;
   disabled: boolean;
@@ -32,6 +44,7 @@ export default function LeadConversation({
   onDraftChange: (dirty: boolean) => void;
   onBusyChange: (busy: boolean) => void;
 }) {
+  const [timeline, setTimeline] = useState("Activity");
   const [events, setEvents] = useState<Event[]>([]),
     [text, setText] = useState(""),
     [files, setFiles] = useState<File[]>([]),
@@ -224,6 +237,11 @@ export default function LeadConversation({
       if (alive.current) setBusy(false);
     }
   }
+  useEffect(() => {
+    const listener = () => void load();
+    window.addEventListener("lead-contact-saved", listener);
+    return () => window.removeEventListener("lead-contact-saved", listener);
+  }, [lead.id]);
   const creator =
     boot.members.find((m) => m.email === lead.created_by)?.display_name ||
     lead.created_by;
@@ -245,14 +263,24 @@ export default function LeadConversation({
           <RefreshCw size={15} />
         </button>
       </header>
-      <QuoLeadTools
-        lead={lead}
-        boot={boot}
-        disabled={disabled || busy || quoBusy || !!lead.archived_at}
-        onDirty={setQuoDirty}
-        onBusy={setQuoBusy}
-        onSaved={onSaved}
-      />
+      <div
+        className="timeline-filters"
+        role="group"
+        aria-label="Conversation filter"
+      >
+        {["Activity", "Calls", "Notes", "Email", "Files", "All history"].map(
+          (t) => (
+            <button
+              type="button"
+              key={t}
+              aria-pressed={timeline === t}
+              onClick={() => setTimeline(t)}
+            >
+              {t}
+            </button>
+          ),
+        )}
+      </div>
       <div
         className="chat-log"
         ref={list}
@@ -276,124 +304,159 @@ export default function LeadConversation({
             Load earlier history
           </button>
         )}
-        <article className="chat-system">
-          <strong>{lead.legacy_id ? "Imported lead" : "Lead created"}</strong>
-          <p>
-            {lead.legacy_id
-              ? "Original creator: " + (creator || "not recorded")
-              : "Created by " + (creator || "Unknown creator")}
-          </p>
-          <time>
-            {lead.legacy_id
-              ? "Original date: " +
-                (lead.original_created_date || "not recorded")
-              : date(lead.created_at)}
-          </time>
-        </article>
-        {lead.notes && (
-          <article className="chat-legacy">
-            <strong>Existing lead notes</strong>
-            <small>
-              Earlier notes · original author and posting time may not be
-              recorded
-            </small>
-            <p>{lead.notes}</p>
+        <details className="legacy-context">
+          <summary>Original lead context & earlier notes</summary>{" "}
+          <article className="chat-system">
+            <strong>{lead.legacy_id ? "Imported lead" : "Lead created"}</strong>
+            <p>
+              {lead.legacy_id
+                ? "Original creator: " + (creator || "not recorded")
+                : "Created by " + (creator || "Unknown creator")}
+            </p>
+            <time>
+              {lead.legacy_id
+                ? "Original date: " +
+                  (lead.original_created_date || "not recorded")
+                : date(lead.created_at)}
+            </time>
           </article>
-        )}
+          {lead.notes && (
+            <article className="chat-legacy">
+              <strong>Existing lead notes</strong>
+              <small>
+                Earlier notes · original author and posting time may not be
+                recorded
+              </small>
+              <p>{lead.notes}</p>
+            </article>
+          )}
+        </details>
         {loading && <p role="status">Loading conversation…</p>}
-        {events.map((event) => {
-          const mine = event.actor_email === boot.member.email;
-          const note = event.action === "Note";
-          const changed =
-            event.snapshot?.before && event.snapshot?.after
-              ? Object.keys(event.snapshot.after).filter(
-                  (k) =>
-                    !["version", "updated_at", "last_activity_at"].includes(
-                      k,
-                    ) &&
-                    JSON.stringify((event.snapshot!.before as any)[k]) !==
-                      JSON.stringify((event.snapshot!.after as any)[k]),
-                )
-              : [];
-          return (
-            <article
-              key={event.id}
-              className={
-                "chat-message " +
-                (mine ? "mine " : "") +
-                (note ? "" : "chat-event")
-              }
-            >
-              <div className="chat-author">
-                <span className="chat-avatar">
-                  {event.actor_name.slice(0, 2).toUpperCase()}
-                </span>
-                <strong>
-                  {event.actor_name}
-                  {mine ? " · You" : ""}
-                </strong>
-                <time dateTime={event.created_at}>
-                  {date(event.created_at)}
-                </time>
-              </div>
-              <div className="chat-bubble">
-                {!note && (
-                  <strong className="chat-event-title">
-                    {event.action}
-                    {event.outcome ? " · " + event.outcome : ""}
+        {events
+          .filter((event) =>
+            timeline === "All history"
+              ? true
+              : timeline === "Activity"
+                ? ![
+                    "Imported",
+                    "Created",
+                    "Updated",
+                    "Lead created",
+                    "Lead updated",
+                  ].includes(event.action)
+                : timeline === "Calls"
+                  ? !!(
+                      event.quo?.kind === "call" ||
+                      event.action.includes("Call")
+                    )
+                  : timeline === "Notes"
+                    ? event.action === "Note"
+                    : timeline === "Email"
+                      ? event.action.includes("Email")
+                      : event.attachments.length > 0,
+          )
+          .map((event) => {
+            const mine = event.actor_email === boot.member.email;
+            const note = event.action === "Note";
+            const changed =
+              event.snapshot?.before && event.snapshot?.after
+                ? Object.keys(event.snapshot.after).filter(
+                    (k) =>
+                      !["version", "updated_at", "last_activity_at"].includes(
+                        k,
+                      ) &&
+                      JSON.stringify((event.snapshot!.before as any)[k]) !==
+                        JSON.stringify((event.snapshot!.after as any)[k]),
+                  )
+                : [];
+            return (
+              <article
+                key={event.id}
+                className={
+                  "chat-message " +
+                  (mine ? "mine " : "") +
+                  (note ? "" : "chat-event")
+                }
+              >
+                <div className="chat-author">
+                  <span className="chat-avatar">
+                    {event.actor_name.slice(0, 2).toUpperCase()}
+                  </span>
+                  <strong>
+                    {event.actor_name}
+                    {mine ? " · You" : ""}
                   </strong>
-                )}
-                {event.details && <p>{event.details}</p>}
-                {event.quo && <QuoActivity event={event.quo} />}
-                {event.from_stage &&
-                  event.to_stage &&
-                  event.from_stage !== event.to_stage && (
+                  <time dateTime={event.created_at}>
+                    {date(event.created_at)}
+                  </time>
+                </div>
+                <div className="chat-bubble">
+                  {!note && (
+                    <strong className="chat-event-title">
+                      {event.action}
+                      {event.outcome ? " · " + event.outcome : ""}
+                    </strong>
+                  )}
+                  {event.details && <p>{event.details}</p>}
+                  {event.quo && (
+                    <QuoActivity
+                      event={event.quo}
+                      onOutcome={() => void load()}
+                    />
+                  )}
+                  {event.from_stage &&
+                    event.to_stage &&
+                    event.from_stage !== event.to_stage && (
+                      <p>
+                        {event.from_stage} → {event.to_stage}
+                      </p>
+                    )}
+                  {changed.length > 0 && (
+                    <small>
+                      Changed:{" "}
+                      {changed.map((s) => s.replaceAll("_", " ")).join(", ")}
+                    </small>
+                  )}
+                  {event.next_action && (
                     <p>
-                      {event.from_stage} → {event.to_stage}
+                      Next: {event.next_action} · {event.next_follow_up}
                     </p>
                   )}
-                {changed.length > 0 && (
-                  <small>
-                    Changed:{" "}
-                    {changed.map((s) => s.replaceAll("_", " ")).join(", ")}
-                  </small>
-                )}
-                {event.next_action && (
-                  <p>
-                    Next: {event.next_action} · {event.next_follow_up}
-                  </p>
-                )}
-                {event.attachments.map((file) => (
-                  <div className="chat-attachment" key={file.id}>
-                    {file.url ? (
-                      file.mime.startsWith("image/") ? (
-                        <a
-                          href={file.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <img src={file.url} alt={file.name} loading="lazy" />
-                        </a>
+                  {event.attachments.map((file) => (
+                    <div className="chat-attachment" key={file.id}>
+                      {file.url ? (
+                        file.mime.startsWith("image/") ? (
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <img
+                              src={file.url}
+                              alt={file.name}
+                              loading="lazy"
+                            />
+                          </a>
+                        ) : (
+                          <>
+                            <strong>Call recording · uploaded</strong>
+                            <audio controls preload="none" src={file.url}>
+                              Your browser does not support audio playback.
+                            </audio>
+                          </>
+                        )
                       ) : (
-                        <>
-                          <strong>Call recording · uploaded</strong>
-                          <audio controls preload="none" src={file.url}>
-                            Your browser does not support audio playback.
-                          </audio>
-                        </>
-                      )
-                    ) : (
-                      <p>Media unavailable. Refresh this conversation.</p>
-                    )}
-                    <span>
-                      {file.name} · {(file.size / 1048576).toFixed(1)} MB
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </article>
-          );
-        })}
+                        <p>Media unavailable. Refresh this conversation.</p>
+                      )}
+                      <span>
+                        {file.name} · {(file.size / 1048576).toFixed(1)} MB
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            );
+          })}
         {!loading && !events.length && (
           <p className="empty">
             Start the conversation. Notes and uploads show who posted them and
@@ -401,7 +464,55 @@ export default function LeadConversation({
           </p>
         )}
       </div>
-      <form className="chat-composer" onSubmit={send}>
+      <div
+        className="composer-modes"
+        role="group"
+        aria-label="Activity composer mode"
+      >
+        {(
+          [
+            ["note", "Internal note"],
+            ["activity", "Log activity"],
+            ["sms", "Customer SMS"],
+          ] as const
+        ).map(([mode, label]) => (
+          <button
+            type="button"
+            key={mode}
+            aria-pressed={composerMode === mode}
+            disabled={busy || quoBusy}
+            onClick={() => onComposerMode(mode)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div className="activity-composer" hidden={composerMode !== "activity"}>
+        {activityForm}
+        <p className="fine">
+          For a Quo call already in the timeline, confirm its outcome on that
+          call rather than logging a second call.
+        </p>
+      </div>
+      <div className="sms-composer" hidden={composerMode !== "sms"}>
+        {" "}
+        <QuoLeadTools
+          lead={lead}
+          boot={boot}
+          disabled={disabled || busy || quoBusy || !!lead.archived_at}
+          onDirty={setQuoDirty}
+          onBusy={setQuoBusy}
+          onSaved={onSaved}
+        />
+      </div>
+      <form
+        className="chat-composer"
+        onSubmit={send}
+        hidden={composerMode !== "note"}
+      >
+        <span className="composer-context">
+          Internal note · visible to the team · not sent to the customer
+        </span>
         {error && (
           <p className="error" role="alert">
             {error}
@@ -475,13 +586,10 @@ export default function LeadConversation({
             }
           >
             <Send size={15} />
-            {busy ? "Posting…" : "Send"}
+            {busy ? "Posting…" : "Post note"}
           </button>
         </div>
-        <small>
-          Images ≤8 MB · recordings ≤25 MB · Getyn recordings must be uploaded
-          manually.
-        </small>
+        <small>Images ≤8 MB · audio ≤25 MB</small>
       </form>
     </section>
   );

@@ -2,17 +2,25 @@
 import { useEffect, useRef, useState } from "react";
 import type { Bootstrap } from "@/lib/types";
 import QuoActivity from "./quo-activity";
-export function QuoAnalytics({ boot }: { boot: Bootstrap }) {
-  const [start, setStart] = useState(
-      new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10),
-    ),
-    [end, setEnd] = useState(boot.today),
-    [actor, setActor] = useState(""),
+export function QuoAnalytics({
+  boot,
+  from,
+  to,
+}: {
+  boot: Bootstrap;
+  from: string;
+  to: string;
+}) {
+  const start = from || "1900-01-01",
+    end = to || boot.today;
+  const [actor, setActor] = useState(""),
     [data, setData] = useState<any>(),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [loading, setLoading] = useState(true);
   useEffect(() => {
     const controller = new AbortController();
     setError("");
+    setLoading(true);
     fetch(
       "/api/quo?" + new URLSearchParams({ mode: "report", start, end, actor }),
       { signal: controller.signal },
@@ -24,6 +32,9 @@ export function QuoAnalytics({ boot }: { boot: Bootstrap }) {
       })
       .catch((e) => {
         if (e.name !== "AbortError") setError(e.message);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
       });
     return () => controller.abort();
   }, [start, end, actor]);
@@ -57,32 +68,15 @@ export function QuoAnalytics({ boot }: { boot: Bootstrap }) {
     <section className="panel quo-analytics">
       <header className="panel-head">
         <div>
-          <h3>Quo communication analytics</h3>
+          <h3>Provider calls & messages</h3>
           <p>
-            Actual provider calls and SMS · Daily chart in America/New_York ·
-            Connected calls can include voicemail pickup.
+            Shared Quo account · {from || "All time"} to {to || boot.today} ·
+            Provider answered includes voicemail. These are not confirmed human
+            conversations or individual rep KPIs.
           </p>
         </div>
       </header>
       <div className="quo-filters">
-        <label>
-          From
-          <input
-            type="date"
-            value={start}
-            max={end}
-            onChange={(e) => setStart(e.target.value)}
-          />
-        </label>
-        <label>
-          Through
-          <input
-            type="date"
-            value={end}
-            min={start}
-            onChange={(e) => setEnd(e.target.value)}
-          />
-        </label>
         <label>
           Quo user
           <select value={actor} onChange={(e) => setActor(e.target.value)}>
@@ -100,20 +94,21 @@ export function QuoAnalytics({ boot }: { boot: Bootstrap }) {
           {error}
         </p>
       )}
+      {loading && <p role="status">Updating provider activity…</p>}
       {data?.calls !== undefined && (
         <>
           <div className="quo-kpis">
             {[
-              ["Calls", data.calls],
+              ["Provider calls", data.calls],
               [
-                "Connected rate",
+                "Provider answered rate",
                 data.terminal
                   ? Math.round((data.answered / data.terminal) * 100) + "%"
                   : "—",
               ],
               ["Missed incoming", data.missed],
               ["Talk time", Math.round(data.seconds / 60) + " min"],
-              ["Average connected", Math.round(data.average) + " sec"],
+              ["Average answered duration", Math.round(data.average) + " sec"],
               ["SMS", data.messages],
             ].map(([label, value]) => (
               <div key={label}>
@@ -132,7 +127,7 @@ export function QuoAnalytics({ boot }: { boot: Bootstrap }) {
               {bars(named(data.agents), "var(--chart-1)")}
             </section>
             <section>
-              <h4>Call outcomes</h4>
+              <h4>Raw provider statuses</h4>
               {bars(data.statuses, "var(--chart-3)")}
             </section>
             <section>
@@ -154,6 +149,7 @@ export default function QuoDashboard({ boot }: { boot: Bootstrap }) {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [notice, setNotice] = useState(""),
+    [historyLoading, setHistoryLoading] = useState(true),
     [mapping, setMapping] = useState<Record<string, string>>({}),
     [linkId, setLinkId] = useState(""),
     [search, setSearch] = useState(""),
@@ -162,6 +158,7 @@ export default function QuoDashboard({ boot }: { boot: Bootstrap }) {
   const fetchToken = useRef(0);
   async function load(older = false) {
     const token = ++fetchToken.current;
+    setHistoryLoading(true);
     setError("");
     try {
       const q = new URLSearchParams({ unmatched: String(unmatched) });
@@ -183,6 +180,8 @@ export default function QuoDashboard({ boot }: { boot: Bootstrap }) {
       setMore(d.hasMore);
     } catch (e) {
       if (token === fetchToken.current) setError((e as Error).message);
+    } finally {
+      if (token === fetchToken.current) setHistoryLoading(false);
     }
   }
   async function loadSetup() {
@@ -251,21 +250,24 @@ export default function QuoDashboard({ boot }: { boot: Bootstrap }) {
             <h3>Quo Phone</h3>
             <p>Calls, recordings and messages connected to the CRM.</p>
           </div>
-          <a
-            className="button purple"
-            href="quo://"
-          >
+          <a className="button purple" href="quo://">
             Open Quo to call
           </a>
         </header>
         <div className="quo-filters">
           <span className="pill">
-            {setup?.configured ? "API connected" : "Not connected"}
+            {!setup
+              ? "Checking connection…"
+              : setup.configured
+                ? "API connected"
+                : "Not connected"}
           </span>
           <span className="pill">
-            {setup?.webhookReady
-              ? "Live webhooks configured"
-              : "Webhooks need configuration"}
+            {!setup
+              ? "Checking webhooks…"
+              : setup.webhookReady
+                ? "Live webhooks configured"
+                : "Webhooks need configuration"}
           </span>
           {setup?.lastSync && (
             <small>
@@ -374,7 +376,8 @@ export default function QuoDashboard({ boot }: { boot: Bootstrap }) {
             <button onClick={() => load()}>Refresh</button>
           </div>
         </header>
-        {!events.length && (
+        {historyLoading && <p role="status">Loading Quo history�</p>}
+        {!historyLoading && !events.length && (
           <p className="empty">
             No activity in this view. Unmatched numbers require administrator
             review.

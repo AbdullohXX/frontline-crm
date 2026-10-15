@@ -15,15 +15,21 @@ export default function SalesAdvisor({
 }) {
   const [report, setReport] = useState<any>(null),
     [busy, setBusy] = useState(false),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [configured, setConfigured] = useState<boolean | null>(null);
   useEffect(() => {
     let alive = true;
     fetch("/api/sales-advisor")
       .then((r) => r.json())
       .then((d) => {
-        if (alive && d.report) setReport(d.report);
+        if (alive) {
+          setConfigured(d.configured === true);
+          if (d.report) setReport(d.report);
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        if (alive) setError("Could not check AI setup. Refresh to retry.");
+      });
     return () => {
       alive = false;
     };
@@ -57,7 +63,7 @@ export default function SalesAdvisor({
         </div>
         <button
           className="primary"
-          disabled={busy || !from || !to}
+          disabled={busy || configured !== true || !from || !to}
           onClick={analyze}
         >
           {busy ? "Analyzing sales…" : "Analyze sales"}
@@ -68,6 +74,13 @@ export default function SalesAdvisor({
         note and call excerpts to Vercel AI Gateway; direct phone/email details
         are omitted. Recommendations never change records or contact leads. Up
         to three runs per hour.
+      </p>
+      <p className="fine" role="status">
+        {configured === null
+          ? "Checking AI configuration�"
+          : configured
+            ? "Model configured. The first run verifies provider access and billing."
+            : "AI setup required: configure a model and activate provider access before running analysis."}
       </p>
       {error && (
         <p className="error" role="alert">

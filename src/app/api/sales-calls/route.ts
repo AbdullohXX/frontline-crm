@@ -7,6 +7,35 @@ export async function GET(request: Request) {
       return json({ sessions: [], attempts: [], calls: [], generators: [] });
     const { db, member } = await authorized();
     const q = new URL(request.url).searchParams;
+    if (q.get("call")) {
+      const id = z
+        .string()
+        .regex(/^AC[a-zA-Z0-9_-]{1,145}$/)
+        .parse(q.get("call"));
+      const [event, claim] = await Promise.all([
+        db
+          .from("quo_events")
+          .select("id,lead_id,direction,status")
+          .eq("id", id)
+          .eq("kind", "call")
+          .maybeSingle(),
+        db
+          .from("sales_calls")
+          .select("rep,outcome,attribution")
+          .eq("call_id", id)
+          .maybeSingle(),
+      ]);
+      if (event.error || claim.error)
+        throw Error("Could not read call attribution");
+      if (!event.data) return json({ error: "Call unavailable" }, 404);
+      return json({
+        claim: claim.data,
+        canConfirm:
+          event.data.direction === "outgoing" &&
+          !!claim.data &&
+          (member.role === "Admin" || claim.data.rep === member.email),
+      });
+    }
     const from = z.iso
       .date()
       .parse(

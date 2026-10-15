@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import "./workspace-polish.css";
 import "./themes.css";
+import "./workflow-ui.css";
 
 const manrope = localFont({
   src: "../../node_modules/@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2",

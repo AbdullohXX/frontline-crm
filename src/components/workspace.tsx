@@ -1,6 +1,15 @@
 "use client";
 import Image from "next/image";
 import IncomingCalls from "./incoming-calls";
+import PipelineBoard from "./pipeline-board";
+import LeadSummary from "./lead-summary";
+import {
+  viewState,
+  viewFromUrl,
+  stateFromUrl,
+  stateToUrl,
+  type ViewState,
+} from "@/lib/workspace-view";
 import { CallingSession } from "./sales-kpis";
 import CallScript from "./call-script";
 import { ActiveUsage } from "./productivity";
@@ -41,7 +50,7 @@ import AdvancedAnalytics from "./advanced-analytics";
 import ThemeSwitcher from "./theme-switcher";
 import Reconciliation from "./reconciliation";
 import LeadConversation from "./lead-conversation";
-import QuoDashboard, { QuoAnalytics } from "./quo-dashboard";
+import QuoDashboard from "./quo-dashboard";
 import { WORK_STATUSES, ZONES, callingInfo } from "@/lib/workflow";
 type View = "day" | "pipeline" | "leads" | "analytics" | "phone" | "settings";
 type Group = { label: string; count: number };
@@ -297,7 +306,7 @@ export default function Workspace() {
     [historyError, setHistoryError] = useState("");
   const [activity, setActivity] = useState({
     type: "Call",
-    outcome: "Connected",
+    outcome: "",
     details: "",
     next_action: "",
     next_follow_up: "",
@@ -324,16 +333,205 @@ export default function Workspace() {
       rows: Record<string, unknown>[];
     } | null>(null),
     [importBusy, setImportBusy] = useState(false);
+  const [contactDirty, setContactDirty] = useState(false),
+    [contactBusy, setContactBusy] = useState(false);
+  const [composerMode, setComposerMode] = useState<"note" | "activity" | "sms">(
+    "note",
+  );
+  const [phoneTab, setPhoneTab] = useState("Queue");
+  const [settingsTab, setSettingsTab] = useState("Team");
   const [chatDirty, setChatDirty] = useState(false),
     [chatBusy, setChatBusy] = useState(false);
   const callOpenGuard = useRef(false);
-  callOpenGuard.current = saving || chatBusy;
+  callOpenGuard.current = saving || chatBusy || contactBusy;
   const drawer = useRef<HTMLDialogElement>(null),
     inputPhone = useRef<HTMLInputElement>(null),
     loadToken = useRef(0),
     historyToken = useRef(0);
+  const [navReady, setNavReady] = useState(false);
+  const viewMemory = useRef<Record<string, ViewState>>({});
+  const navigationUrl = useRef("");
+  const restoreSequence = useRef(0);
+  const scrollToRestore = useRef<number | null>(null);
+  const [columns, setColumns] = useState({
+    value: false,
+    priority: true,
+    timezone: false,
+  });
+  const captureView = (): ViewState =>
+    viewState({
+      search,
+      scope,
+      due,
+      stage,
+      page,
+      owner: ownerFilter,
+      zone: zoneFilter,
+      work: workFilter,
+      date: exactDate,
+      dateField,
+      archived,
+      density,
+    });
+  function applyView(v: View, state: ViewState) {
+    scrollToRestore.current = state.scroll;
+    setView(v);
+    setSearch(state.search);
+    setQuery(state.search);
+    setScope(state.scope);
+    setDue(state.due);
+    setStage(state.stage);
+    setPage(state.page);
+    setOwnerFilter(state.owner);
+    setZoneFilter(state.zone);
+    setWorkFilter(state.work);
+    setExactDate(state.date);
+    setDateField(state.dateField);
+    setArchived(state.archived);
+    setDensity(state.density);
+    setChecked([]);
+  }
+  const navGuard = useRef({
+    dirty: false,
+    saving: false,
+    chatBusy: false,
+    chatDirty: false,
+  });
+  navGuard.current = {
+    dirty: dirty || contactDirty,
+    saving: saving || contactBusy,
+    chatBusy,
+    chatDirty,
+  };
+  useEffect(() => {
+    if (!boot) return;
+    if (boot.member.role !== "Admin") setSettingsTab("Preferences");
+    const key = "frontline-views:" + boot.member.email;
+    let saved: any = {};
+    try {
+      saved = JSON.parse(localStorage.getItem(key) || "{}");
+      if (!saved || typeof saved !== "object") saved = {};
+    } catch {}
+    viewMemory.current = saved.views || {};
+    if (saved.columns)
+      setColumns({
+        value: saved.columns.value === true,
+        priority: saved.columns.priority !== false,
+        timezone: saved.columns.timezone === true,
+      });
+    async function restore(initial = false) {
+      const token = ++restoreSequence.current;
+      const guard = navGuard.current;
+      if (
+        !initial &&
+        (guard.dirty || guard.chatDirty || guard.saving || guard.chatBusy)
+      ) {
+        if (navigationUrl.current)
+          window.history.pushState(null, "", navigationUrl.current);
+        setToast(
+          "Finish your current lead changes before using browser navigation.",
+        );
+        return;
+      }
+      const q = new URLSearchParams(window.location.search);
+      const v =
+        viewFromUrl(q) ||
+        (initial && saved.lastView) ||
+        (boot!.member.job_role === "Lead generator" ? "leads" : "day");
+      const safeView = [
+        "day",
+        "pipeline",
+        "leads",
+        "analytics",
+        "phone",
+        "settings",
+      ].includes(v)
+        ? (v as View)
+        : "day";
+      applyView(
+        safeView,
+        viewFromUrl(q)
+          ? stateFromUrl(q)
+          : viewState(viewMemory.current[safeView]),
+      );
+      setNavReady(true);
+      const id = q.get("lead");
+      if (id && /^[a-f0-9-]{36}$/i.test(id)) {
+        try {
+          const result = await api<{ lead: Lead }>(
+            "/api/conversation?lead=" + encodeURIComponent(id),
+          );
+          if (
+            token === restoreSequence.current &&
+            !navGuard.current.dirty &&
+            !navGuard.current.chatDirty &&
+            !navGuard.current.saving &&
+            !navGuard.current.chatBusy
+          )
+            openLead(result.lead);
+        } catch {
+          setToast("That lead link is unavailable for this account.");
+        }
+      } else if (drawer.current?.open) {
+        drawer.current.close();
+        setDraft(null);
+        setSelected(null);
+      }
+    }
+    void restore(true);
+    const pop = () => void restore();
+    window.addEventListener("popstate", pop);
+    return () => window.removeEventListener("popstate", pop);
+  }, [boot?.member.email]);
+  useEffect(() => {
+    if (!boot || !navReady) return;
+    const state = captureView();
+    viewMemory.current[view] = state;
+    const timer = setTimeout(() => {
+      try {
+        localStorage.setItem(
+          "frontline-views:" + boot.member.email,
+          JSON.stringify({
+            views: viewMemory.current,
+            lastView: view,
+            columns,
+          }),
+        );
+      } catch {}
+      const lead = new URLSearchParams(window.location.search).get("lead");
+      window.history.replaceState(null, "", stateToUrl(view, state, lead));
+      navigationUrl.current = window.location.href;
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [
+    boot?.member.email,
+    navReady,
+    view,
+    search,
+    scope,
+    due,
+    stage,
+    page,
+    ownerFilter,
+    zoneFilter,
+    workFilter,
+    exactDate,
+    dateField,
+    archived,
+    density,
+    columns,
+  ]);
+  useEffect(() => {
+    if (!loading && scrollToRestore.current !== null) {
+      const y = scrollToRestore.current;
+      scrollToRestore.current = null;
+      const frame = requestAnimationFrame(() => window.scrollTo({ top: y }));
+      return () => cancelAnimationFrame(frame);
+    }
+  }, [loading, leads]);
   const today = boot?.today || new Date().toISOString().slice(0, 10);
   useEffect(() => {
+    if (search === query) return;
     const timer = setTimeout(() => {
       setQuery(search);
       setPage(0);
@@ -345,6 +543,7 @@ export default function Workspace() {
     const timer = setTimeout(() => setToast(""), 5000);
     return () => clearTimeout(timer);
   }, [toast]);
+  const [boardRevision, setBoardRevision] = useState(0);
   async function connect() {
     setAccessError("");
     listCache.current.clear();
@@ -352,6 +551,7 @@ export default function Workspace() {
     setLoading(true);
     try {
       setBoot(await api<Bootstrap>("/api/bootstrap"));
+      setBoardRevision((n) => n + 1);
     } catch (e) {
       setAccessError((e as Error).message);
     } finally {
@@ -383,11 +583,12 @@ export default function Workspace() {
     }, 500);
   }
   async function load(force = false) {
-    if (!boot) return;
+    if (!boot || !navReady) return;
     listAbort.current?.abort();
     const token = ++loadToken.current;
-    if (view === "analytics" || view === "settings") {
+    if (["analytics", "settings", "pipeline"].includes(view)) {
       setLoading(false);
+      void refreshReport(force);
       return;
     }
     const params = new URLSearchParams({
@@ -456,6 +657,7 @@ export default function Workspace() {
     void load();
   }, [
     boot,
+    navReady,
     view,
     query,
     scope,
@@ -470,22 +672,10 @@ export default function Workspace() {
     archived,
   ]);
   function navigate(v: View) {
-    setView(v);
-    setOwnerFilter("");
-    setZoneFilter("");
-    setWorkFilter("");
-    setExactDate("");
-    setArchived(false);
-    setChecked([]);
-    setSearch("");
-    setQuery("");
-    setStage("");
-    setPage(0);
-    setDue("due");
-    if (v !== "analytics") {
-      setReportFrom("");
-      setReportTo("");
-    }
+    viewMemory.current[view] = { ...captureView(), scroll: window.scrollY };
+    const next = viewState(viewMemory.current[v]);
+    window.history.pushState(null, "", stateToUrl(v, next));
+    applyView(v, next);
   }
   async function loadHistory(l: Lead) {
     const token = ++historyToken.current;
@@ -503,20 +693,21 @@ export default function Workspace() {
   }
   function openLead(
     l: Lead | null = null,
-    tab: "details" | "activity" = "details",
+    tab: "details" | "activity" = "activity",
     complete = false,
   ) {
     setChatDirty(false);
     setChatBusy(false);
     setSelected(l);
     setDraft(l ? { ...l } : emptyLead(boot!.member.email));
-    setDrawerTab(tab);
+    setDrawerTab(l ? tab : "details");
+    setComposerMode(complete ? "activity" : "note");
     setDirty(false);
     setDrawerError("");
     setDuplicateReason("");
     setActivity({
       type: complete ? "Note" : "Call",
-      outcome: complete ? "Completed" : "Connected",
+      outcome: complete ? "Completed" : "",
       details: "",
       next_action: "",
       next_follow_up: "",
@@ -529,16 +720,31 @@ export default function Workspace() {
       setHistoryError("");
     }
     drawer.current?.showModal();
+    const url = new URL(window.location.href);
+    if (l) url.searchParams.set("lead", l.id);
+    else url.searchParams.delete("lead");
+    window.history.replaceState(null, "", url);
+    navigationUrl.current = url.href;
   }
   function close() {
-    if (saving || chatBusy) return;
-    if ((dirty || chatDirty) && !window.confirm("Discard unsaved changes?"))
+    if (saving || chatBusy || contactBusy) return;
+    if (
+      (dirty || chatDirty || contactDirty) &&
+      !window.confirm("Discard unsaved changes?")
+    )
       return;
     drawer.current?.close();
     historyToken.current++;
     setDraft(null);
     setSelected(null);
     setDirty(false);
+    clearLeadUrl();
+  }
+  function clearLeadUrl() {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("lead");
+    window.history.replaceState(null, "", url);
+    navigationUrl.current = url.href;
   }
   async function saveLead(event: FormEvent) {
     event.preventDefault();
@@ -558,8 +764,11 @@ export default function Workspace() {
       } else {
         drawer.current?.close();
         setDraft(null);
+        setSelected(null);
+        clearLeadUrl();
       }
       setToast("Lead saved with audit history.");
+      setBoardRevision((n) => n + 1);
       listCache.current.clear();
       reportAt.current = 0;
       await load(true);
@@ -662,6 +871,7 @@ export default function Workspace() {
               " updated.",
       );
       invalidateReports();
+      return saved;
     } catch (e) {
       const map = new Map(originals.map((l) => [l.id, l]));
       setLeads((all) => all.map((l) => map.get(l.id) || l));
@@ -679,11 +889,12 @@ export default function Workspace() {
     if (next === l.stage || pending.current.has(l.id) || l.archived_at) return;
     if (next === "Lost") {
       openLead(l);
+      setDrawerTab("details");
       setDraft({ ...l, stage: "Lost" });
       setDirty(true);
       return;
     }
-    await changeLeads([l], "stage", next);
+    return await changeLeads([l], "stage", next);
   }
   function resetFilters() {
     setSearch("");
@@ -798,6 +1009,106 @@ export default function Workspace() {
     setChecked((all) =>
       all.includes(id) ? all.filter((x) => x !== id) : [...all, id],
     );
+  const activityForm = selected ? (
+    <form onSubmit={record} onChange={() => setDirty(true)}>
+      <h3>
+        {activity.complete ? "Complete follow-up" : "Record a conversation"}
+      </h3>
+      <div className="form-grid">
+        <Field label="Activity type">
+          <select
+            value={activity.type}
+            onChange={(e) =>
+              setActivity({
+                ...activity,
+                type: e.target.value,
+                outcome: e.target.value === "Call" ? "" : "Completed",
+              })
+            }
+          >
+            {["Call", "Email", "Meeting"].map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Outcome">
+          <select
+            required
+            value={activity.outcome}
+            onChange={(e) =>
+              setActivity({ ...activity, outcome: e.target.value })
+            }
+          >
+            <option value="">Choose actual outcome</option>
+            {(activity.type === "Call"
+              ? [
+                  "Connected",
+                  "No answer",
+                  "Voicemail",
+                  "Not interested",
+                  "Other",
+                ]
+              : OUTCOMES
+            ).map((s) => (
+              <option key={s}>{s}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="What happened?" full>
+          <textarea
+            required
+            maxLength={4000}
+            value={activity.details}
+            onChange={(e) =>
+              setActivity({ ...activity, details: e.target.value })
+            }
+          />
+        </Field>
+        <Field label="Next action (optional)">
+          <input
+            maxLength={300}
+            value={activity.next_action}
+            onChange={(e) =>
+              setActivity({
+                ...activity,
+                next_action: e.target.value,
+              })
+            }
+          />
+        </Field>
+        <Field label="Next follow-up">
+          <input
+            type="date"
+            value={activity.next_follow_up}
+            onChange={(e) =>
+              setActivity({
+                ...activity,
+                next_follow_up: e.target.value,
+              })
+            }
+          />
+        </Field>
+      </div>
+      <p className="fine">
+        Provide both next action and date to reschedule.{" "}
+        {activity.complete
+          ? "Leaving both blank clears this follow-up."
+          : "Leaving both blank preserves the current follow-up."}
+      </p>
+      <button
+        className="purple"
+        disabled={
+          saving || contactBusy || boot?.demo || !!selected?.archived_at
+        }
+      >
+        {saving
+          ? "Saving…"
+          : activity.complete
+            ? "Complete follow-up"
+            : "Save activity"}
+      </button>
+    </form>
+  ) : null;
   const leadRows = (list: Lead[]) =>
     list.map((l) => (
       <tr key={l.id} aria-busy={pendingIds.includes(l.id)}>
@@ -814,12 +1125,15 @@ export default function Workspace() {
           <button className="text-button" onClick={() => openLead(l)}>
             {l.company}
           </button>
-          <small>
+          <small className="legacy-detail">
             {l.legacy_id || l.id.slice(0, 8)} ·{" "}
             {l.original_created_date || l.created_at.slice(0, 10)}
           </small>
           <small
-            className={callingInfo(l, now).open ? "calling-open" : "muted"}
+            className={
+              "timezone-detail " +
+              (callingInfo(l, now).open ? "calling-open" : "muted")
+            }
           >
             {callingInfo(l, now).label} {callingInfo(l, now).time} ·{" "}
             {callingInfo(l, now).zone
@@ -856,12 +1170,12 @@ export default function Workspace() {
                 : ""}
           </small>
         </td>
-        <td>{money(l.value)}</td>
+        <td className="value-column">{money(l.value)}</td>
         <td>
           {l.next_action || "No next action"}
           <small>{l.next_follow_up || "Unscheduled"}</small>
         </td>
-        <td>
+        <td className="priority-column">
           <span className={l.priority === "High" ? "priority" : ""}>
             {l.priority}
           </span>
@@ -872,18 +1186,27 @@ export default function Workspace() {
               <a href={"mailto:" + encodeURIComponent(l.email)}>Email</a>
             )}
             {l.phone && (
-              <a href={"tel:" + l.phone.replace(/[^+\d]/g, "")}>Call</a>
+              <a href="quo://" aria-label={"Open Quo for " + l.company}>
+                Quo
+              </a>
             )}
-            <button onClick={() => openLead(l, "details")}>Script</button>
-            <button onClick={() => openLead(l, "activity")}>History</button>
-            <button
-              disabled={pendingIds.includes(l.id)}
-              onClick={() =>
-                changeLeads([l], l.archived_at ? "restore" : "archive")
-              }
-            >
-              {l.archived_at ? "Restore" : "Archive"}
-            </button>
+            <details className="row-menu">
+              <summary aria-label={"More actions for " + l.company}>
+                More
+              </summary>
+              <button onClick={() => openLead(l, "details")}>
+                Edit details
+              </button>
+              <button onClick={() => openLead(l, "activity")}>History</button>
+              <button
+                disabled={pendingIds.includes(l.id)}
+                onClick={() =>
+                  changeLeads([l], l.archived_at ? "restore" : "archive")
+                }
+              >
+                {l.archived_at ? "Restore" : "Archive"}
+              </button>
+            </details>
           </div>
         </td>
       </tr>
@@ -978,17 +1301,29 @@ export default function Workspace() {
     ],
   };
   return (
-    <div className="app" data-density={density}>
+    <div
+      className="app"
+      data-density={density}
+      data-view={view}
+      data-show-value={columns.value}
+      data-show-priority={columns.priority}
+      data-show-timezone={columns.timezone}
+    >
       <IncomingCalls
         enabled={!boot.demo}
-        blocked={!!draft || saving || chatBusy}
-        locked={saving || chatBusy}
+        blocked={!!draft || saving || chatBusy || contactBusy}
+        locked={saving || chatBusy || contactBusy}
         dialog={drawer.current}
         onOpen={async (id, replace) => {
-          const result = await api<{ lead: Lead }>("/api/conversation?lead=" + encodeURIComponent(id));
-          if (callOpenGuard.current) throw Error("Finish saving before opening the caller");
-          if (!replace && drawer.current?.open) throw Error("A lead is already open");
-          if (!result.lead || result.lead.archived_at) throw Error("Lead not available");
+          const result = await api<{ lead: Lead }>(
+            "/api/conversation?lead=" + encodeURIComponent(id),
+          );
+          if (callOpenGuard.current)
+            throw Error("Finish saving before opening the caller");
+          if (!replace && drawer.current?.open)
+            throw Error("A lead is already open");
+          if (!result.lead || result.lead.archived_at)
+            throw Error("Lead not available");
           openLead(result.lead, "activity");
         }}
       />
@@ -1134,15 +1469,18 @@ export default function Workspace() {
               </button>
             </div>
           )}
-          <div className="company-strip">
-            <span>
-              {boot.workAddress ||
-                "Colorado Springs, 1801 South Cascade Avenue, ZIP 80905"}
-            </span>
-            <a href={"tel:" + (boot.teamPhone || "+19295773302")}>
-              Team phone: {boot.teamPhone || "+19295773302"}
-            </a>
-          </div>
+          <details className="company-strip">
+            <summary>Company contact details</summary>
+            <div>
+              <span>
+                {boot.workAddress ||
+                  "30 N Gould St Ste N Sheridan, WY, 82801, USA"}
+              </span>
+              <a href={"tel:" + (boot.teamPhone || "+13074294109")}>
+                Team phone: {boot.teamPhone || "+13074294109"}
+              </a>
+            </div>
+          </details>
           {report && ["day", "pipeline", "leads"].includes(view) && (
             <Metrics
               items={
@@ -1439,6 +1777,53 @@ export default function Workspace() {
               </div>
             </details>
           )}
+          {!["analytics", "settings"].includes(view) && (
+            <div className="active-filter-chips" aria-label="Active filters">
+              {[
+                {
+                  value: stage,
+                  label: "Stage: " + stage,
+                  clear: () => setStage(""),
+                },
+                {
+                  value: ownerFilter,
+                  label:
+                    "Owner: " +
+                    (boot.members.find((m) => m.email === ownerFilter)
+                      ?.display_name || ownerFilter),
+                  clear: () => setOwnerFilter(""),
+                },
+                {
+                  value: zoneFilter,
+                  label: "Timezone: " + zoneFilter,
+                  clear: () => setZoneFilter(""),
+                },
+                {
+                  value: workFilter,
+                  label: "Category: " + workFilter,
+                  clear: () => setWorkFilter(""),
+                },
+                {
+                  value: exactDate,
+                  label: "Date: " + exactDate,
+                  clear: () => setExactDate(""),
+                },
+              ]
+                .filter((f) => f.value)
+                .map((f) => (
+                  <button
+                    key={f.label}
+                    onClick={() => {
+                      f.clear();
+                      setPage(0);
+                    }}
+                    aria-label={"Remove " + f.label}
+                  >
+                    {f.label} ×
+                  </button>
+                ))}
+            </div>
+          )}
           {view === "day" && (
             <div className="day-layout">
               <section className="panel">
@@ -1449,7 +1834,9 @@ export default function Workspace() {
                       {today} · {boot.timeZone}
                     </p>
                   </div>
-                  <span className="badge">{total} follow-ups</span>
+                  <span className="badge">
+                    {loading ? "Updating…" : total + " follow-ups"}
+                  </span>
                 </div>
                 {loading ? (
                   <div className="empty">Loading your queue…</div>
@@ -1506,6 +1893,38 @@ export default function Workspace() {
                 {pagination}
               </section>
               <div>
+                <section className="panel quick-queues">
+                  <h3>Work queues</h3>
+                  <button
+                    onClick={() => {
+                      setDue("overdue");
+                      setPage(0);
+                    }}
+                  >
+                    Overdue follow-ups
+                  </button>
+                  <button
+                    onClick={() => {
+                      setDue("unscheduled");
+                      setPage(0);
+                    }}
+                  >
+                    Needs a next step
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigate("phone");
+                      setZoneFilter("calling");
+                      setDue("all");
+                    }}
+                  >
+                    Callable now
+                  </button>
+                  <p className="fine">
+                    All leads remain accessible. Choose My leads for your
+                    assigned work.
+                  </p>
+                </section>
                 {report && (
                   <Bars
                     title="Pipeline pulse"
@@ -1537,7 +1956,26 @@ export default function Workspace() {
           {view === "leads" && (
             <section className="panel">
               <div className="panel-head">
-                <h3>{total} leads</h3>
+                <h3>{loading ? "Updating leads…" : total + " leads"}</h3>
+                <details className="column-picker">
+                  <summary>Columns</summary>
+                  {(["value", "priority", "timezone"] as const).map((key) => (
+                    <label key={key}>
+                      <input
+                        type="checkbox"
+                        checked={columns[key]}
+                        onChange={(e) =>
+                          setColumns((c) => ({ ...c, [key]: e.target.checked }))
+                        }
+                      />
+                      {key === "value"
+                        ? "Deal value"
+                        : key === "priority"
+                          ? "Priority"
+                          : "Calling timezone"}
+                    </label>
+                  ))}
+                </details>
                 <span className="muted">
                   Open a company to see the full context
                 </span>
@@ -1636,7 +2074,18 @@ export default function Workspace() {
                         "Priority",
                         "Actions",
                       ].map((s) => (
-                        <th key={s}>{s}</th>
+                        <th
+                          key={s}
+                          className={
+                            s === "Value"
+                              ? "value-column"
+                              : s === "Priority"
+                                ? "priority-column"
+                                : ""
+                          }
+                        >
+                          {s}
+                        </th>
                       ))}
                     </tr>
                   </thead>
@@ -1654,143 +2103,33 @@ export default function Workspace() {
             </section>
           )}
           {view === "pipeline" && (
-            <>
-              <p className="fine board-note">
-                Board shows the current page of up to 100 leads. Use filters and
-                page controls to reach every opportunity.
-              </p>
-              <div className="board">
-                {STAGES.map((s) => {
-                  const rows = leads.filter((l) => l.stage === s);
-                  return (
-                    <section
-                      key={s}
-                      data-stage={s}
-                      className={
-                        "lane " + (hoverLane === s ? "drop-target" : "")
-                      }
-                      onDragEnter={() => setHoverLane(s)}
-                      onDragLeave={() => setHoverLane("")}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        setHoverLane("");
-                        const l = leads.find(
-                          (l) => l.id === e.dataTransfer.getData("text/plain"),
-                        );
-                        if (l) move(l, s);
-                      }}
-                    >
-                      <div className="lane-head">
-                        <h3>
-                          {s}
-                          <span>{rows.length}</span>
-                        </h3>
-                        <p>{money(rows.reduce((n, l) => n + l.value, 0))}</p>
-                      </div>
-                      {rows.map((l) => (
-                        <article
-                          key={l.id}
-                          className="deal-card"
-                          aria-busy={pendingIds.includes(l.id)}
-                          draggable={
-                            !pendingIds.includes(l.id) && !l.archived_at
-                          }
-                          onDragEnd={() => setHoverLane("")}
-                          onDragStart={(e) =>
-                            e.dataTransfer.setData("text/plain", l.id)
-                          }
-                        >
-                          <button
-                            className="text-button"
-                            onClick={() => openLead(l)}
-                          >
-                            {l.company}
-                          </button>
-                          <p>{l.contact || "No contact name"}</p>
-                          <div className="card-owner">
-                            <span className="owner-dot">
-                              {(
-                                boot.members.find(
-                                  (m) => m.email === l.owner_email,
-                                )?.display_name || l.owner_email
-                              )
-                                .slice(0, 2)
-                                .toUpperCase()}
-                            </span>
-                            {boot.members.find((m) => m.email === l.owner_email)
-                              ?.display_name || l.owner_email}
-                          </div>
-                          <small
-                            className={
-                              callingInfo(l, now).open
-                                ? "calling-open"
-                                : "muted"
-                            }
-                          >
-                            {callingInfo(l, now).label}{" "}
-                            {callingInfo(l, now).time}
-                          </small>
-                          {pendingIds.includes(l.id) && (
-                            <small role="status">Saving…</small>
-                          )}
-                          <div className="flex between">
-                            <b>{money(l.value)}</b>
-                            <span
-                              className={
-                                l.priority === "High" ? "priority" : "muted"
-                              }
-                            >
-                              {l.priority}
-                            </span>
-                          </div>
-                          <div
-                            className={
-                              "card-next " +
-                              (l.next_follow_up && l.next_follow_up < today
-                                ? "card-overdue"
-                                : "")
-                            }
-                          >
-                            <Clock3 size={12} />
-                            <span>
-                              {l.next_follow_up
-                                ? (l.next_follow_up < today
-                                    ? "Overdue · "
-                                    : l.next_follow_up === today
-                                      ? "Today · "
-                                      : "") + l.next_follow_up
-                                : "No follow-up scheduled"}
-                            </span>
-                          </div>
-                          <select
-                            aria-label={"Stage for " + l.company}
-                            value={l.stage}
-                            disabled={
-                              pendingIds.includes(l.id) || !!l.archived_at
-                            }
-                            onChange={(e) => move(l, e.target.value)}
-                          >
-                            {STAGES.map((st) => (
-                              <option key={st}>{st}</option>
-                            ))}
-                          </select>
-                        </article>
-                      ))}
-                      {!rows.length && (
-                        <div className="empty">No leads on this page.</div>
-                      )}
-                    </section>
-                  );
-                })}
-              </div>
-              {pagination}
-            </>
+            <PipelineBoard
+              filters={new URLSearchParams({
+                search: query,
+                scope: scope === "mine" ? "mine" : "",
+                owner: ownerFilter,
+                tz: zoneFilter,
+                work_status: workFilter,
+                date: exactDate,
+                date_field: dateField,
+                stage,
+                today,
+              }).toString()}
+              revision={boardRevision}
+              members={boot.members}
+              onOpen={(l) => openLead(l)}
+              onMove={move}
+            />
           )}
           {view === "analytics" && (
             <>
-              <QuoAnalytics boot={boot} />
               <AdvancedAnalytics
+                onQueue={(queue) => {
+                  navigate("day");
+                  setDue(queue);
+                  setScope("all");
+                  setPage(0);
+                }}
                 onLead={async (id) => {
                   try {
                     const result = await api<{ lead: Lead }>(
@@ -1812,134 +2151,186 @@ export default function Workspace() {
           )}
           {view === "phone" && (
             <>
-              <CallingSession boot={boot} />
-
-              <QuoDashboard boot={boot} />
-              <div className="notice">
-                Use the calling queue below to work through your leads. Quo
-                activity syncs automatically; you can still record outcomes
-                here.
+              <div
+                className="workspace-tabs"
+                role="tablist"
+                aria-label="Calling workspace sections"
+              >
+                {["Queue", "History & integration"].map((t) => (
+                  <button
+                    key={t}
+                    role="tab"
+                    aria-selected={phoneTab === t}
+                    onClick={() => setPhoneTab(t)}
+                  >
+                    {t}
+                  </button>
+                ))}
               </div>
-              <div className="flex wrap phone-links">
-                <a href="quo://" className="button purple">
-                  Open Quo <ArrowUpRight size={16} />
-                </a>
-                <button onClick={() => setSkips([])}>
-                  Reset session skips
-                </button>
-              </div>
-              {report && (
-                <Metrics
-                  items={[
-                    ["Recorded calls", report.calls, "All accessible calls"],
-                    ["Connected", report.connected, "Manually logged"],
-                    [
-                      "Connection rate",
-                      report.calls
-                        ? Math.round((100 * report.connected) / report.calls) +
-                          "%"
-                        : "—",
-                      "Connected / calls",
-                    ],
-                    [
-                      "Queued on this page",
-                      phoneQueue.length,
-                      "Open leads with phone numbers",
-                    ],
-                  ]}
-                />
-              )}
-              <div className="day-layout">
-                <section className="panel">
-                  <div className="panel-head">
-                    <h3>Calling queue</h3>
-                    <span className="badge">Manual workflow</span>
+              {phoneTab === "History & integration" ? (
+                <QuoDashboard boot={boot} />
+              ) : (
+                <>
+                  <div className="queue-toolbar">
+                    <span>
+                      Calls run in Quo. Register each call for shared-account
+                      attribution.
+                    </span>
+                    <button onClick={() => setSkips([])}>
+                      Reset skipped leads
+                    </button>
                   </div>
-                  <div className="phone-current">
-                    {phoneLead ? (
-                      <>
-                        <div className="eyebrow">
-                          {phoneLead.stage} · {phoneLead.priority} PRIORITY
-                        </div>
-                        <h2>{phoneLead.company}</h2>
-                        <p>{phoneLead.contact || "No contact name"}</p>
-                        <input
-                          ref={inputPhone}
-                          aria-label="Lead phone number"
-                          className="phone-number"
-                          readOnly
-                          value={phoneLead.phone}
-                        />
-                        <p className="muted">
-                          {phoneLead.next_action || "No next action"} ·{" "}
-                          {phoneLead.next_follow_up || "Unscheduled"}
-                        </p>
-                        <div className="flex wrap">
-                          <CallingSession boot={boot} lead={phoneLead} />
-                          <button onClick={() => copyNumber(phoneLead)}>
-                            <Copy size={15} />
-                            Copy number
-                          </button>
-                          <a className="button purple" href="quo://">
-                            Open Quo <ArrowUpRight size={15} />
-                          </a>
-                          <button
-                            className="primary"
-                            onClick={() => openLead(phoneLead, "activity")}
-                          >
-                            Record outcome <ArrowRight size={15} />
-                          </button>
-                          <button
-                            onClick={() =>
-                              setSkips((s) => [...s, phoneLead.id])
-                            }
-                          >
-                            Skip for now
-                          </button>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="empty">
-                        {loading
-                          ? "Loading queue…"
-                          : "No callable leads left on this page. Change filters, reset skips, or go to the next page."}
+                  <div className="day-layout">
+                    <section className="panel">
+                      <div className="panel-head">
+                        <h3>Calling queue</h3>
+                        <span className="badge">Manual workflow</span>
                       </div>
-                    )}
-                  </div>
-                  {phoneQueue.slice(0, 15).map((l) => (
-                    <div className="phone-list-row" key={l.id}>
-                      <button
-                        className="text-button"
-                        onClick={() => setPhoneId(l.id)}
-                      >
-                        {l.company}
-                      </button>
-                      <small>{l.next_follow_up || "Unscheduled"}</small>
+                      <div className="phone-current">
+                        {phoneLead ? (
+                          <>
+                            <div className="eyebrow">
+                              {phoneLead.stage} · {phoneLead.priority} PRIORITY
+                            </div>
+                            <h2>{phoneLead.company}</h2>
+                            <p>{phoneLead.contact || "No contact name"}</p>
+                            <input
+                              ref={inputPhone}
+                              aria-label="Lead phone number"
+                              className="phone-number"
+                              readOnly
+                              value={phoneLead.phone}
+                            />
+                            <p className="muted">
+                              {phoneLead.next_action || "No next action"} ·{" "}
+                              {phoneLead.next_follow_up || "Unscheduled"}
+                            </p>
+                            <div className="flex wrap">
+                              <CallingSession boot={boot} lead={phoneLead} />
+                              <button onClick={() => copyNumber(phoneLead)}>
+                                <Copy size={15} />
+                                Copy number
+                              </button>
+                              <a className="button purple" href="quo://">
+                                Open Quo <ArrowUpRight size={15} />
+                              </a>
+                              <button
+                                className="primary"
+                                onClick={() => {
+                                  openLead(phoneLead, "activity");
+                                  setComposerMode("activity");
+                                }}
+                              >
+                                Record outcome <ArrowRight size={15} />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  setSkips((s) => [...s, phoneLead.id])
+                                }
+                              >
+                                Skip for now
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="empty">
+                            {loading
+                              ? "Loading queue…"
+                              : "No callable leads left on this page. Change filters, reset skips, or go to the next page."}
+                          </div>
+                        )}
+                      </div>
+                      {phoneQueue.slice(0, 15).map((l) => (
+                        <div className="phone-list-row" key={l.id}>
+                          <button
+                            className="text-button"
+                            onClick={() => setPhoneId(l.id)}
+                          >
+                            {l.company}
+                          </button>
+                          <small>{l.next_follow_up || "Unscheduled"}</small>
+                        </div>
+                      ))}
+                      {pagination}
+                    </section>
+                    <div>
+                      {report && (
+                        <>
+                          <Bars
+                            title="Call outcomes"
+                            subtitle="All time · manually recorded"
+                            rows={report.outcomes}
+                          />
+                          <Bars title="Calls by agent" rows={report.agents} />
+                        </>
+                      )}
                     </div>
-                  ))}
-                  {pagination}
-                </section>
-                <div>
-                  {report && (
-                    <>
-                      <Bars
-                        title="Call outcomes"
-                        subtitle="All time · manually recorded"
-                        rows={report.outcomes}
-                      />
-                      <Bars title="Calls by agent" rows={report.agents} />
-                    </>
-                  )}
-                </div>
-              </div>
+                  </div>
+                </>
+              )}
             </>
           )}
-          {view === "settings" && boot.member.role === "Admin" && (
-            <Reconciliation />
+          {view === "settings" && (
+            <div
+              className="workspace-tabs"
+              role="tablist"
+              aria-label="Settings sections"
+            >
+              {["Team", "Company", "Integrations", "Data tools", "Preferences"]
+                .filter(
+                  (t) =>
+                    boot.member.role === "Admin" ||
+                    t === "Preferences" ||
+                    t === "Company",
+                )
+                .map((t) => (
+                  <button
+                    key={t}
+                    role="tab"
+                    aria-selected={settingsTab === t}
+                    onClick={() => setSettingsTab(t)}
+                  >
+                    {t}
+                  </button>
+                ))}
+            </div>
           )}
+          {view === "settings" && settingsTab === "Company" && (
+            <section className="panel settings-panel">
+              <h3>Company profile</h3>
+              <p>{boot.workAddress}</p>
+              <a href={"tel:" + boot.teamPhone}>{boot.teamPhone}</a>
+              <p className="fine">
+                Company details are shared across this workspace.
+              </p>
+            </section>
+          )}
+          {view === "settings" && settingsTab === "Preferences" && (
+            <section className="panel settings-panel">
+              <h3>Your workspace</h3>
+              <ThemeSwitcher />
+              <p>
+                Your theme, list density, columns and filters are remembered on
+                this device for your account.
+              </p>
+              <p>
+                Ctrl/Cmd+K or / focuses search. Lead profiles can be shared
+                using Copy lead link.
+              </p>
+            </section>
+          )}
+          {view === "settings" &&
+            settingsTab === "Integrations" &&
+            boot.member.role === "Admin" && <QuoDashboard boot={boot} />}
+          {view === "settings" &&
+            settingsTab === "Data tools" &&
+            boot.member.role === "Admin" && <Reconciliation />}
           {view === "settings" && boot.member.role === "Admin" && (
-            <div className="settings-grid">
-              <section className="panel settings-panel">
+            <div className="settings-grid" data-settings-tab={settingsTab}>
+              <section
+                className="panel settings-panel team-settings"
+                hidden={settingsTab !== "Team"}
+              >
                 <h3>Team access</h3>
                 <p>
                   Only approved frontline-x.com Google accounts can enter. Every
@@ -2053,7 +2444,10 @@ export default function Workspace() {
                   </div>
                 </form>
               </section>
-              <section className="panel settings-panel">
+              <section
+                className="panel settings-panel import-settings"
+                hidden={settingsTab !== "Data tools"}
+              >
                 <h3>Import from Google Sheets</h3>
                 <p>
                   Export the lead tab as CSV. Review mappings and errors before
@@ -2214,7 +2608,7 @@ export default function Workspace() {
             <button
               aria-label="Close lead"
               onClick={close}
-              disabled={saving || chatBusy}
+              disabled={saving || chatBusy || contactBusy}
             >
               <X size={16} />
               Close
@@ -2245,14 +2639,14 @@ export default function Workspace() {
             <button
               className={drawerTab === "details" ? "active" : ""}
               onClick={() => {
-                if (dirty && drawerTab === "activity") {
+                if ((dirty || contactDirty) && drawerTab === "activity") {
                   setDrawerError("Save this activity before changing tabs.");
                   return;
                 }
                 setDrawerTab("details");
               }}
             >
-              Details
+              Edit details
             </button>
             <button
               disabled={!selected || !!selected.archived_at}
@@ -2267,7 +2661,7 @@ export default function Workspace() {
                 setDrawerTab("activity");
               }}
             >
-              Activity & history
+              Overview & conversation
             </button>
           </div>
         </div>
@@ -2509,7 +2903,12 @@ export default function Workspace() {
                   </button>
                   <button
                     className="primary"
-                    disabled={saving || !!selected?.archived_at}
+                    disabled={
+                      saving ||
+                      contactBusy ||
+                      boot.demo ||
+                      !!selected?.archived_at
+                    }
                   >
                     {saving
                       ? "Saving…"
@@ -2522,114 +2921,45 @@ export default function Workspace() {
             )}
             {drawerTab === "activity" && selected && (
               <>
-                <form onSubmit={record} onChange={() => setDirty(true)}>
-                  <h3>
-                    {activity.complete
-                      ? "Complete follow-up"
-                      : "Record a conversation"}
-                  </h3>
-                  <div className="form-grid">
-                    <Field label="Activity type">
-                      <select
-                        value={activity.type}
-                        onChange={(e) =>
-                          setActivity({
-                            ...activity,
-                            type: e.target.value,
-                            outcome:
-                              e.target.value === "Call"
-                                ? "Connected"
-                                : "Completed",
-                          })
-                        }
-                      >
-                        {["Call", "Email", "Meeting", "Note"].map((s) => (
-                          <option key={s}>{s}</option>
-                        ))}
-                      </select>
-                    </Field>
-                    <Field label="Outcome">
-                      <select
-                        value={activity.outcome}
-                        onChange={(e) =>
-                          setActivity({ ...activity, outcome: e.target.value })
-                        }
-                      >
-                        {(activity.type === "Call"
-                          ? [
-                              "Connected",
-                              "No answer",
-                              "Voicemail",
-                              "Not interested",
-                              "Other",
-                            ]
-                          : OUTCOMES
-                        ).map((s) => (
-                          <option key={s}>{s}</option>
-                        ))}
-                      </select>
-                    </Field>
-                    <Field label="What happened?" full>
-                      <textarea
-                        required
-                        maxLength={4000}
-                        value={activity.details}
-                        onChange={(e) =>
-                          setActivity({ ...activity, details: e.target.value })
-                        }
-                      />
-                    </Field>
-                    <Field label="Next action (optional)">
-                      <input
-                        maxLength={300}
-                        value={activity.next_action}
-                        onChange={(e) =>
-                          setActivity({
-                            ...activity,
-                            next_action: e.target.value,
-                          })
-                        }
-                      />
-                    </Field>
-                    <Field label="Next follow-up">
-                      <input
-                        type="date"
-                        value={activity.next_follow_up}
-                        onChange={(e) =>
-                          setActivity({
-                            ...activity,
-                            next_follow_up: e.target.value,
-                          })
-                        }
-                      />
-                    </Field>
-                  </div>
-                  <p className="fine">
-                    Provide both next action and date to reschedule.{" "}
-                    {activity.complete
-                      ? "Leaving both blank clears this follow-up."
-                      : "Leaving both blank preserves the current follow-up."}
-                  </p>
-                  <button
-                    className="purple"
-                    disabled={saving || !!selected?.archived_at}
-                  >
-                    {saving
-                      ? "Saving…"
-                      : activity.complete
-                        ? "Complete follow-up"
-                        : "Save activity"}
-                  </button>
-                </form>
+                <LeadSummary
+                  lead={selected}
+                  boot={boot}
+                  contactDisabled={dirty || chatDirty || saving}
+                  onContactDirty={setContactDirty}
+                  onContactBusy={setContactBusy}
+                  onContactsSaved={() => {
+                    void loadHistory(selected);
+                    window.dispatchEvent(new Event("lead-contact-saved"));
+                  }}
+                  onEdit={() => {
+                    if (dirty || contactDirty) {
+                      setDrawerError("Save this activity first.");
+                      return;
+                    }
+                    setDrawerTab("details");
+                  }}
+                  onActivity={() => setComposerMode("activity")}
+                  onCopyLink={async () => {
+                    try {
+                      await navigator.clipboard.writeText(window.location.href);
+                      setToast("Lead link copied.");
+                    } catch {
+                      setToast("Copy the address from your browser.");
+                    }
+                  }}
+                />
               </>
             )}
           </fieldset>
           {selected && (
             <LeadConversation
               key={selected.id}
+              activityForm={activityForm}
+              composerMode={composerMode}
+              onComposerMode={setComposerMode}
               lead={selected}
               boot={boot}
-              disabled={dirty || saving}
+              disabled={dirty || saving || contactDirty || contactBusy}
               onDraftChange={setChatDirty}
               onBusyChange={setChatBusy}
               onSaved={(saved) => {

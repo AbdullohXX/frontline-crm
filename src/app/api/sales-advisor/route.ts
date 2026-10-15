@@ -13,7 +13,8 @@ import { z } from "zod";
 export const maxDuration = 120;
 export async function GET() {
   try {
-    if (localDemo()) return json({ report: null });
+    if (localDemo())
+      return json({ report: null, configured: false, demo: true });
     const { db, member } = await authorized();
     const { data, error } = await db
       .from("sales_advisor_runs")
@@ -24,7 +25,10 @@ export async function GET() {
       .limit(1)
       .maybeSingle();
     if (error) throw Error("Could not load previous sales analysis");
-    return json({ report: data?.report || null });
+    return json({
+      report: data?.report || null,
+      configured: !!process.env.AI_GATEWAY_MODEL,
+    });
   } catch (e) {
     return failure(e);
   }
@@ -33,7 +37,6 @@ export async function POST(request: Request) {
   let runId: string | undefined;
   let db: any;
   try {
-
     if (localDemo())
       return json(
         {
@@ -148,7 +151,9 @@ export async function POST(request: Request) {
     const facts = { ...snapshot.facts, recordedActivity };
     const summaries: string[] = [];
     const transcriptSamples: string[] = [];
-    const sampledCalls = scopedCalls.filter((c) => c.duration > 0 && snapshot.evidence["call:"+c.id]).slice(0, 8);
+    const sampledCalls = scopedCalls
+      .filter((c) => c.duration > 0 && snapshot.evidence["call:" + c.id])
+      .slice(0, 8);
     for (let i = 0; i < sampledCalls.length; i += 3)
       await Promise.all(
         sampledCalls.slice(i, i + 3).map(async (c) => {
@@ -203,7 +208,10 @@ export async function POST(request: Request) {
       callTextSamples: sampledCalls.length,
       summariesAvailable: summaries.length,
       transcriptsAvailable: transcriptSamples.length,
-      owner: p.owner ? membersResult.data.find((m:any)=>m.email===p.owner)?.display_name || "Unknown" : "",
+      owner: p.owner
+        ? membersResult.data.find((m: any) => m.email === p.owner)
+            ?.display_name || "Unknown"
+        : "",
       source: scrub(p.source),
     };
     const { output } = await generateText({

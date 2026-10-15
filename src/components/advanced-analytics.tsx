@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Productivity from "./productivity";
 import SalesKpis from "./sales-kpis";
 import SalesAdvisor from "./sales-advisor";
+import { QuoAnalytics } from "./quo-dashboard";
 import { STAGES, type Bootstrap } from "@/lib/types";
 import type { AdvancedReport, Slice } from "@/lib/analytics";
 const colors = [
@@ -306,10 +307,12 @@ export default function AdvancedAnalytics({
   boot,
   onStage,
   onLead,
+  onQueue,
 }: {
   boot: Bootstrap;
   onStage: (stage: string) => void;
   onLead: (id: string) => void;
+  onQueue: (queue: string) => void;
 }) {
   const [from, setFrom] = useState(shift(boot.today, -29)),
     [to, setTo] = useState(boot.today),
@@ -368,16 +371,9 @@ export default function AdvancedAnalytics({
   };
   return (
     <div className="advanced-analytics">
-      <SalesAdvisor
-        from={from}
-        to={to}
-        owner={owner}
-        source={source}
-        onLead={onLead}
-      />
       <div className="analytics-controls filters">
         <label>
-          <span>Activity from</span>
+          <span>Report from</span>
           <input
             aria-label="Analytics from"
             type="date"
@@ -397,6 +393,7 @@ export default function AdvancedAnalytics({
         <label>
           <span>Lead owner</span>
           <select
+            disabled={tab === "Calls & messages"}
             aria-label="Analytics owner"
             value={owner}
             onChange={(e) => setOwner(e.target.value)}
@@ -418,6 +415,7 @@ export default function AdvancedAnalytics({
         <label>
           <span>Lead source</span>
           <select
+            disabled={tab === "Calls & messages"}
             aria-label="Analytics source"
             value={source}
             onChange={(e) => setSource(e.target.value)}
@@ -474,7 +472,9 @@ export default function AdvancedAnalytics({
           ? "Updating analytics…"
           : "All accessible records, across every page"}
         <span>
-          Owner and source filter all charts. Dates filter recorded activity.
+          Dates apply across report tabs. Owner/source filter CRM charts; Team
+          performance uses its member selector; provider calls use the Quo user
+          selector. Shared Quo users are not individual reps.
         </span>
       </div>
       <div
@@ -482,7 +482,13 @@ export default function AdvancedAnalytics({
         role="tablist"
         aria-label="Analytics sections"
       >
-        {["Overview", "Pipeline & health", "Activity & team"].map((t) => (
+        {[
+          "Overview",
+          "Pipeline & health",
+          "Calls & messages",
+          "Activity & team",
+          "AI advisor",
+        ].map((t) => (
           <button
             key={t}
             role="tab"
@@ -494,7 +500,17 @@ export default function AdvancedAnalytics({
           </button>
         ))}
       </div>
-      {error ? (
+      {tab === "Calls & messages" ? (
+        <QuoAnalytics boot={boot} from={from} to={to} />
+      ) : tab === "AI advisor" ? (
+        <SalesAdvisor
+          from={from}
+          to={to}
+          owner={owner}
+          source={source}
+          onLead={onLead}
+        />
+      ) : error ? (
         <div role="alert" className="error">
           {error}
         </div>
@@ -508,11 +524,15 @@ export default function AdvancedAnalytics({
             {[
               ["Accessible leads", s.total, "Current snapshot"],
               ["Open pipeline", money(s.openValue), `${s.open} open leads`],
-              ["Recorded calls", s.calls, "Selected period"],
               [
-                "Connection rate",
+                "Manually logged calls",
+                s.calls,
+                "CRM activities · selected period",
+              ],
+              [
+                "Manual connected share",
                 percent(s.connected, s.calls),
-                "Connected / recorded calls",
+                "Marked connected / manually logged calls",
               ],
               [
                 "Closed win share",
@@ -564,7 +584,18 @@ export default function AdvancedAnalytics({
                   title="Follow-up health"
                   hint="Open leads · relative to today in CRM timezone"
                 >
-                  <Horizontal rows={r.followup} />
+                  <Horizontal
+                    rows={r.followup}
+                    onSelect={(label) =>
+                      onQueue(
+                        label === "Overdue"
+                          ? "overdue"
+                          : label === "Unscheduled"
+                            ? "unscheduled"
+                            : "upcoming",
+                      )
+                    }
+                  />
                 </Card>
                 <Card
                   title="Won value over time"
@@ -667,7 +698,7 @@ export default function AdvancedAnalytics({
             {tab === "Activity & team" && (
               <>
                 <div className="insight-wide">
-                  <SalesKpis boot={boot} />
+                  <SalesKpis boot={boot} period={{ from, to }} />
                   <Productivity boot={boot} report={r} from={from} to={to} />
                 </div>
                 <Card
@@ -788,7 +819,8 @@ export default function AdvancedAnalytics({
             Snapshot charts describe current lead records. Imported history is
             not reconstructed. All charts respect database permissions. Event
             charts describe activity logged in this CRM; Quo provider activity
-            is shown separately above.
+            is shown in Calls & messages. Provider answers may include
+            voicemail.
           </div>
         </>
       ) : null}

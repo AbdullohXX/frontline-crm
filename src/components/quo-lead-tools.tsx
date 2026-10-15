@@ -92,16 +92,20 @@ export default function QuoLeadTools({
       setBusy(false);
     }
   }
-  if (!setup?.configured && !error) return null;
+  if (!setup?.configured && !error)
+    return (
+      <p role="status">
+        {setup
+          ? "Customer SMS requires a connected Quo account. Ask an administrator to review Integrations."
+          : "Checking Quo messaging setup�"}
+      </p>
+    );
   return (
-    <details className="quo-lead-tools">
+    <details className="quo-lead-tools" open>
       <summary>Quo Phone · calls & SMS</summary>
       <p>
-        Place calls in{" "}
-        <a href="quo://">
-          Quo
-        </a>
-        . Calls and replies appear in this conversation automatically.
+        Place calls in <a href="quo://">Quo</a>. Calls and replies appear in
+        this conversation automatically.
       </p>
       <div className="flex wrap">
         <button

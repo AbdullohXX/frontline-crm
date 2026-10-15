@@ -118,7 +118,13 @@ export function CallingSession({
     </details>
   );
 }
-export default function SalesKpis({ boot }: { boot: Bootstrap }) {
+export default function SalesKpis({
+  boot,
+  period,
+}: {
+  boot: Bootstrap;
+  period?: { from: string; to: string };
+}) {
   const [from, setFrom] = useState(boot.today),
     [to, setTo] = useState(boot.today),
     [data, setData] = useState<any>({
@@ -128,6 +134,12 @@ export default function SalesKpis({ boot }: { boot: Bootstrap }) {
     }),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (period) {
+      setFrom(period.from || "1900-01-01");
+      setTo(period.to || boot.today);
+    }
+  }, [period?.from, period?.to, boot.today]);
   const sequence = useRef(0);
   async function load() {
     const requestId = ++sequence.current;
@@ -204,7 +216,7 @@ export default function SalesKpis({ boot }: { boot: Bootstrap }) {
         review. Answered includes voicemail; human contact requires rep
         confirmation.
       </p>
-      <div className="flex wrap">
+      <div className="flex wrap" hidden={!!period}>
         <label>
           From
           <input

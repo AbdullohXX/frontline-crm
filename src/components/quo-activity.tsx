@@ -1,13 +1,22 @@
 "use client";
 import { useEffect, useState } from "react";
 import { mergeQuoDetails } from "@/lib/quo-details";
-export default function QuoActivity({ event }: { event: any }) {
+import CallOutcome from "./call-outcome";
+export default function QuoActivity({
+  event,
+  onOutcome,
+}: {
+  event: any;
+  onOutcome?: () => void;
+}) {
   const [details, setDetails] = useState<any>(event.payload || {}),
     [open, setOpen] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   useEffect(() => {
-    setDetails((previous: any) => mergeQuoDetails(previous, event.payload || {}));
+    setDetails((previous: any) =>
+      mergeQuoDetails(previous, event.payload || {}),
+    );
   }, [event.payload]);
   async function load() {
     setOpen(true);
@@ -54,6 +63,11 @@ export default function QuoActivity({ event }: { event: any }) {
       </button>
       {open && (
         <div className="quo-artifacts">
+          {onOutcome &&
+            event.direction === "outgoing" &&
+            !["ringing", "in-progress", "queued"].includes(event.status) && (
+              <CallOutcome id={event.id} onSaved={onOutcome} />
+            )}
           {error && (
             <p role="alert" className="error">
               {error}
