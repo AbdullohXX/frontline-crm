@@ -353,6 +353,17 @@ test("Quo database deduplicates events, protects shared access and preserves lea
     ok: true,
   });
   assert.equal((await ingest("status", {})).pendingContacts, 0);
+  const ringing = normalizeQuo("call", {
+    id: "ACincomingUnique", direction: "incoming", status: "ringing",
+    createdAt: new Date().toISOString(),
+  }, { participants: { external: ["+14155550123"] } }, "call.ringing");
+  await ingest("events", { events: [ringing] });
+  await identity(2);
+  const incoming = (await db.query<any>("select lead_id,status,direction from public.quo_events where id='ACincomingUnique'")).rows[0];
+  assert.equal(incoming.lead_id, lead.id);
+  assert.equal(incoming.status, "ringing");
+  assert.equal(incoming.direction, "incoming");
+  await identity(1);
   const related = await rpc("save_lead", {
     company: "Related customer",
     phone: "+14155550123",
@@ -363,6 +374,8 @@ test("Quo database deduplicates events, protects shared access and preserves lea
     owner_email: "agent@frontline-x.com",
     duplicate_reason: "Separate branch at shared number",
   });
+  await ingest("events", { events: [{ ...ringing, id: "ACincomingAmbiguous" }] });
+  assert.equal((await db.query<any>("select lead_id from public.quo_events where id='ACincomingAmbiguous'")).rows[0].lead_id, null);
   const chosen = normalizeQuo("message", {
     id: "ACchosen",
     direction: "outgoing",

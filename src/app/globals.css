@@ -2477,3 +2477,18 @@ td input[type="checkbox"] {
     max-width: 100%;
   }
 }
+.incoming-call-alert {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  width: min(26rem, calc(100vw - 2rem));
+  padding: 1rem;
+  border: 2px solid #8580df;
+  border-radius: 14px;
+  background: var(--panel, #192436);
+  color: var(--text, #f4f5fa);
+  box-shadow: 0 8px 36px #0004;
+}
+.incoming-call-alert p { margin: .5rem 0; }
+.incoming-call-alert button { margin: .25rem .5rem 0 0; }

@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import IncomingCalls from "./incoming-calls";
 import { CallingSession } from "./sales-kpis";
 import CallScript from "./call-script";
 import { ActiveUsage } from "./productivity";
@@ -325,6 +326,8 @@ export default function Workspace() {
     [importBusy, setImportBusy] = useState(false);
   const [chatDirty, setChatDirty] = useState(false),
     [chatBusy, setChatBusy] = useState(false);
+  const callOpenGuard = useRef(false);
+  callOpenGuard.current = saving || chatBusy;
   const drawer = useRef<HTMLDialogElement>(null),
     inputPhone = useRef<HTMLInputElement>(null),
     loadToken = useRef(0),
@@ -976,6 +979,19 @@ export default function Workspace() {
   };
   return (
     <div className="app" data-density={density}>
+      <IncomingCalls
+        enabled={!boot.demo}
+        blocked={!!draft || saving || chatBusy}
+        locked={saving || chatBusy}
+        dialog={drawer.current}
+        onOpen={async (id, replace) => {
+          const result = await api<{ lead: Lead }>("/api/conversation?lead=" + encodeURIComponent(id));
+          if (callOpenGuard.current) throw Error("Finish saving before opening the caller");
+          if (!replace && drawer.current?.open) throw Error("A lead is already open");
+          if (!result.lead || result.lead.archived_at) throw Error("Lead not available");
+          openLead(result.lead, "activity");
+        }}
+      />
       <ActiveUsage demo={boot.demo} />
       <aside className="sidebar">
         <div className="wordmark">
