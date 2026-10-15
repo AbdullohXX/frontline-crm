@@ -2,6 +2,7 @@
 import Image from "next/image";
 import IncomingCalls from "./incoming-calls";
 import PipelineBoard from "./pipeline-board";
+import RowActions from "./row-actions";
 import LeadSummary from "./lead-summary";
 import {
   viewState,
@@ -1190,23 +1191,16 @@ export default function Workspace() {
                 Quo
               </a>
             )}
-            <details className="row-menu">
-              <summary aria-label={"More actions for " + l.company}>
-                More
-              </summary>
-              <button onClick={() => openLead(l, "details")}>
-                Edit details
-              </button>
-              <button onClick={() => openLead(l, "activity")}>History</button>
-              <button
-                disabled={pendingIds.includes(l.id)}
-                onClick={() =>
-                  changeLeads([l], l.archived_at ? "restore" : "archive")
-                }
-              >
-                {l.archived_at ? "Restore" : "Archive"}
-              </button>
-            </details>
+            <RowActions
+              company={l.company}
+              archived={!!l.archived_at}
+              disabled={pendingIds.includes(l.id)}
+              onEdit={() => openLead(l, "details")}
+              onHistory={() => openLead(l, "activity")}
+              onArchive={() => {
+                void changeLeads([l], l.archived_at ? "restore" : "archive");
+              }}
+            />
           </div>
         </td>
       </tr>

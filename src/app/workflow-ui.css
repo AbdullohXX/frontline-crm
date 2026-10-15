@@ -139,6 +139,8 @@
   display: none;
 }
 .app .row-shortcuts {
+  display: flex;
+  align-items: center;
   flex-wrap: nowrap;
   gap: 6px;
 }
@@ -146,10 +148,6 @@
   padding: 6px 9px;
   font-size: 12px;
 }
-.row-menu {
-  position: relative;
-}
-.row-menu summary,
 .column-picker summary {
   cursor: pointer;
   padding: 6px 9px;
@@ -157,14 +155,55 @@
   border-radius: 7px;
   color: var(--text);
 }
-.row-menu[open] {
-  min-width: 125px;
+.app .row-shortcuts > a,
+.app .row-more-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  height: 32px;
+  min-height: 32px;
+  flex: 0 0 auto;
+  line-height: 1;
+  white-space: nowrap;
+  margin: 0;
+  padding: 6px 9px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  text-decoration: none;
 }
-.row-menu button {
+.row-more-trigger span {
+  margin-left: 6px;
+}
+.row-actions-popover {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  width: 168px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 8px 28px #0003;
+}
+.row-actions-popover::backdrop {
+  background: transparent;
+}
+.row-actions-popover button {
   display: block;
-  margin-top: 5px;
   width: 100%;
+  min-height: 36px;
+  margin: 0;
+  padding: 8px 10px;
   text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--text);
+}
+.row-actions-popover button:hover {
+  background: var(--panel-2, var(--bg));
 }
 .column-picker {
   margin-left: auto;
