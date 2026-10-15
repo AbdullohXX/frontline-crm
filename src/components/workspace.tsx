@@ -1187,7 +1187,10 @@ export default function Workspace() {
               <a href={"mailto:" + encodeURIComponent(l.email)}>Email</a>
             )}
             {l.phone && (
-              <a href="quo://" aria-label={"Open Quo for " + l.company}>
+              <a
+                href={"tel:" + l.phone.replace(/[^+\d]/g, "")}
+                aria-label={"Open Quo for " + l.company}
+              >
                 Quo
               </a>
             )}
@@ -2205,7 +2208,13 @@ export default function Workspace() {
                                 <Copy size={15} />
                                 Copy number
                               </button>
-                              <a className="button purple" href="quo://">
+                              <a
+                                className="button purple"
+                                href={
+                                  "tel:" +
+                                  phoneLead.phone.replace(/[^+\d]/g, "")
+                                }
+                              >
                                 Open Quo <ArrowUpRight size={15} />
                               </a>
                               <button
@@ -2619,7 +2628,10 @@ export default function Workspace() {
                 </a>
               )}
               {selected.phone && (
-                <a className="button" href="quo://">
+                <a
+                  className="button"
+                  href={"tel:" + selected.phone.replace(/[^+\d]/g, "")}
+                >
                   Open Quo app <Phone size={14} />
                 </a>
               )}

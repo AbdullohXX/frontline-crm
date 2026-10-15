@@ -102,7 +102,14 @@ export function CallingSession({
           </button>
         )}
         {ready && (
-          <a className="button primary" href="quo://">
+          <a
+            className="button primary"
+            href={
+              lead?.phone
+                ? "tel:" + lead.phone.replace(/[^+\d]/g, "")
+                : "quo://"
+            }
+          >
             Open Quo app
           </a>
         )}

@@ -45,7 +45,10 @@ export default function LeadSummary({
         {lead.phone && (
           <div>
             <strong>{lead.phone}</strong>
-            <a className="button" href="quo://">
+            <a
+              className="button"
+              href={"tel:" + lead.phone.replace(/[^+\d]/g, "")}
+            >
               Open Quo app
             </a>
           </div>

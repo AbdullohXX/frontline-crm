@@ -122,7 +122,10 @@ export default function LeadContacts({
             {c.phone && (
               <div>
                 <span>{c.phone}</span>
-                <a className="button" href="quo://">
+                <a
+                  className="button"
+                  href={"tel:" + c.phone.replace(/[^+\d]/g, "")}
+                >
                   Open Quo
                 </a>
               </div>
