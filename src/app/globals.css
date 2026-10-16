@@ -2498,3 +2498,5 @@ td input[type="checkbox"] {
 .lead-workflow-tools{display:grid;gap:.5rem;margin:1rem 0}.lead-workflow-tools details{margin:0;padding:.65rem;min-width:0}.lead-workflow-tools form{display:grid;gap:.5rem;margin-top:.5rem}.lead-workflow-tools input,.lead-workflow-tools select{width:100%;min-width:0}
 
 .day-sidebar{display:grid;gap:22px;align-content:start;min-width:0}.day-sidebar .chart + .chart{margin-top:0}.day-sidebar > .panel:first-child{padding:20px 22px}.day-sidebar > .panel:first-child > p{margin:.5rem 0;color:var(--muted)}.day-sidebar article{margin:.75rem 0}.day-sidebar .calling-session{margin:.5rem 0}
+
+.call-inline-error{display:inline-flex;align-items:center;gap:.3rem;font-size:.75rem;color:var(--muted);max-width:16rem}.call-inline-error button{padding:0 .3rem;min-height:24px}.row-shortcuts .tracked-call{flex-wrap:nowrap;align-items:center}

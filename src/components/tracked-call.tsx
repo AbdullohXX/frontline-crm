@@ -64,6 +64,7 @@ export default function TrackedCall({
           : { phone: d.phone, id: d.attempt, expires: d.expires_at },
       );
       window.dispatchEvent(new Event("calling-session-changed"));
+      if (!cancel) window.location.assign("tel:" + d.phone);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -72,29 +73,49 @@ export default function TrackedCall({
   }
   return (
     <span className="tracked-call">
-      <button
-        type="button"
-        disabled={busy || disabled || boot.demo || !phone}
-        onClick={() => void action()}
-      >
-        {busy ? "Preparing…" : "Call in Quo"}
-      </button>
+      {!ready && (
+        <button
+          type="button"
+          disabled={busy || disabled || boot.demo || !phone}
+          onClick={() => void action()}
+        >
+          {busy ? "Preparing…" : "Call in Quo"}
+        </button>
+      )}
       {ready && (
         <>
-          <a className="button primary" href={"tel:" + ready.phone}>
-            Open Quo · ready
+          <a
+            className="button primary"
+            title="Registered to you. Open the Quo desktop app."
+            href={"tel:" + ready.phone}
+          >
+            Open Quo
           </a>
           <button
             type="button"
             disabled={busy}
+            aria-label="Cancel unused call attempt"
+            title="Cancel this attempt if no call was made"
             onClick={() => void action(true)}
           >
-            Cancel attempt
+            ×
           </button>
-          <small>Call within 10 minutes to credit this attempt to you.</small>
         </>
       )}
-      {error && <small role="alert">{error}</small>}
+      {error && (
+        <span className="call-inline-error" role="alert" title={error}>
+          {error.includes("awaiting Quo")
+            ? "Another call is pending"
+            : "Could not prepare call"}
+          <button
+            type="button"
+            aria-label="Dismiss call message"
+            onClick={() => setError("")}
+          >
+            ×
+          </button>
+        </span>
+      )}
     </span>
   );
 }
