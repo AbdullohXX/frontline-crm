@@ -1,5 +1,6 @@
 import { authorized, localDemo } from "@/lib/auth";
 import { sameOrigin, json, failure } from "@/lib/http";
+import {serverWorkflow} from "@/lib/server-workflow";
 export const maxDuration = 60;
 export async function POST(request: Request) {
   try {
@@ -61,8 +62,7 @@ export async function POST(request: Request) {
       );
       rows.push(...batch);
     }
-    const { data: imported, error } = await db.rpc("import_gmail", { p: rows });
-    if (error) throw Error("Could not log sent emails. Safe to retry.");
+    const imported = await serverWorkflow(member.email,"gmail",rows);
     return json({
       imported,
       scanned: rows.length,

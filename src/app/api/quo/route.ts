@@ -11,6 +11,8 @@ import {
   callMetrics,
 } from "@/lib/quo";
 import { ingest, ingestEvents, syncQuo, syncContact } from "@/lib/quo-server";
+import { serverWorkflow } from "@/lib/server-workflow";
+import { can } from "@/lib/capabilities";
 export const maxDuration = 300;
 export async function GET(request: Request) {
   try {
@@ -79,6 +81,11 @@ export async function GET(request: Request) {
     }
     if (q.get("mode") === "setup") {
       let numbers: any[] = [];
+      const { data: shared, error: se } = await db
+        .from("shared_quo_numbers")
+        .select("id")
+        .eq("enabled", true);
+      if (se) throw Error("Shared-number settings unavailable");
       if (process.env.QUO_API_KEY) {
         const result = await quoRequest("/v1/phone-numbers", { legacy: true });
         const mine = (users || [])
@@ -88,7 +95,10 @@ export async function GET(request: Request) {
           id: n.id,
           name: n.name,
           number: n.number,
-          canSend: n.users.some((u: any) => mine.includes(u.id)),
+          shared: shared?.some((s) => s.id === n.id),
+          canSend:
+            n.users.some((u: any) => mine.includes(u.id)) ||
+            (can(member, "shared_sms") && !!shared?.some((s) => s.id === n.id)),
           restrictions: n.restrictions,
         }));
       }
@@ -151,11 +161,13 @@ export async function POST(request: Request) {
           "sync_contact",
           "send_sms",
           "map_user",
+          "share_number",
           "link",
         ]),
         lead: z.uuid().optional(),
         id: z.string().max(150).optional(),
         email: z.email().optional(),
+        enabled: z.boolean().optional(),
         from: z
           .string()
           .regex(/^PN[a-zA-Z0-9_-]+$/)
@@ -164,6 +176,18 @@ export async function POST(request: Request) {
         request_id: z.uuid().optional(),
       })
       .parse(await body(request));
+    if (p.operation === "share_number") {
+      if (member.role !== "Admin") throw new HttpError("Admin required", 403);
+      const numbers = await quoRequest("/v1/phone-numbers", { legacy: true });
+      if (!numbers.data.some((n: any) => n.id === p.id))
+        throw new HttpError("Number unavailable", 400);
+      return json(
+        await serverWorkflow(member.email, "share_number", {
+          id: p.id,
+          enabled: p.enabled === true,
+        }),
+      );
+    }
     if (p.operation === "map_user" || p.operation === "link") {
       if (member.role !== "Admin") throw new HttpError("Admin required", 403);
       const { error } = await db.rpc("quo_manage", { p });
@@ -183,7 +207,37 @@ export async function POST(request: Request) {
     if (p.operation === "sync") {
       if (member.role !== "Admin" && !lead)
         throw new HttpError("Admin required for workspace sync", 403);
-      const result = await syncQuo(lead);
+      let lease: string | undefined;
+      if (lead) {
+        try {
+          lease = (
+            await serverWorkflow(member.email, "sync_start", {
+              lead_id: lead.id,
+            })
+          ).id;
+        } catch (e) {
+          throw new HttpError(
+            (e as Error).message,
+            (e as Error).message.startsWith("RATE:") ? 429 : 503,
+          );
+        }
+      }
+      let result;
+      try {
+        result = await syncQuo(lead);
+        if (lease)
+          await serverWorkflow(member.email, "sync_finish", {
+            id: lease,
+            success: true,
+          });
+      } catch (e) {
+        if (lease)
+          await serverWorkflow(member.email, "sync_finish", {
+            id: lease,
+            success: false,
+          }).catch(() => {});
+        throw e;
+      }
       if (lead) {
         const { data: saved } = await db
           .from("leads")
@@ -209,8 +263,16 @@ export async function POST(request: Request) {
     if (ue) throw Error("Could not verify sender");
     const numbers = await quoRequest("/v1/phone-numbers", { legacy: true });
     const number = numbers.data.find((n: any) => n.id === p.from);
-    const sender = number?.users.find((u: any) =>
-      users?.some((m) => m.id === u.id),
+    const { data: sharedNumber, error: sharedError } = await db
+      .from("shared_quo_numbers")
+      .select("id")
+      .eq("id", p.from)
+      .eq("enabled", true)
+      .maybeSingle();
+    if (sharedError) throw Error("Could not verify shared sender permission");
+    const sharedAllowed = can(member, "shared_sms") && !!sharedNumber;
+    const sender = number?.users.find(
+      (u: any) => sharedAllowed || users?.some((m) => m.id === u.id),
     );
     if (!sender)
       throw new HttpError(

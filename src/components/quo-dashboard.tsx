@@ -295,6 +295,23 @@ export default function QuoDashboard({ boot }: { boot: Bootstrap }) {
           <div className="quo-number" key={n.id}>
             <strong>{n.name}</strong>
             <span>{n.number}</span>
+            {boot.member.role === "Admin" && (
+              <label>
+                <input
+                  type="checkbox"
+                  checked={!!n.shared}
+                  disabled={busy || boot.demo}
+                  onChange={(e) =>
+                    void act({
+                      operation: "share_number",
+                      id: n.id,
+                      enabled: e.target.checked,
+                    })
+                  }
+                />
+                Allow approved sales reps to send shared SMS
+              </label>
+            )}
           </div>
         ))}
       </section>
@@ -302,8 +319,10 @@ export default function QuoDashboard({ boot }: { boot: Bootstrap }) {
         <details className="panel quo-admin">
           <summary>Quo user mapping</summary>
           <p>
-            Link each Quo user to their CRM account. Only users assigned to a
-            Quo number can send from it.
+            Link each Quo user to their CRM account. Mapped users can send from
+            their numbers. Approved sales reps may also use explicitly shared
+            numbers. Caller credit comes from registered CRM calls, not this
+            mapping.
           </p>
           {setup?.users?.map((u: any) => (
             <div className="quo-mapping" key={u.id}>

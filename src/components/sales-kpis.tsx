@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import CallOutcome from "./call-outcome";
 import type { Bootstrap, Lead } from "@/lib/types";
 const outcomes = [
   "Spoke to person",
@@ -21,107 +22,86 @@ async function act(p: unknown) {
   if (!r.ok) throw Error(d.error);
   return d;
 }
-export function CallingSession({
-  lead,
-  boot,
-}: {
-  lead?: Lead;
-  boot: Bootstrap;
-}) {
-  const [session, setSession] = useState<any>();
-  const [notice, setNotice] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [ready, setReady] = useState(false);
-  async function load() {
-    try {
-      const r = await fetch("/api/sales-calls");
-      if (r.ok) {
-        const d = await r.json();
-        setSession(d.sessions[0]);
-      }
-    } catch {
-      setNotice("Could not check your calling session.");
-    }
-  }
+export function CallingSession({ boot }: { lead?: Lead; boot: Bootstrap }) {
+  const [data, setData] = useState<any>({ sessions: [], attempts: [] }),
+    [error, setError] = useState(""),
+    [busy, setBusy] = useState(false);
+  const eligible =
+    boot.member.active &&
+    (boot.member.role === "Admin" || boot.member.job_role === "Sales rep");
   useEffect(() => {
-    void load();
-    const t = setInterval(() => void load(), 30000);
-    return () => clearInterval(t);
-  }, []);
-  useEffect(() => setReady(false), [lead?.id]);
-  async function run(action: string) {
-    setBusy(true);
-    setNotice("");
-    try {
-      await act({ action, lead_id: lead?.id });
-      if (action === "attempt") {
-        setReady(true);
-        setNotice(
-          "Attempt registered for 10 minutes. Call this number in Quo now.",
-        );
-      } else {
-        setReady(false);
-        await load();
+    if (!eligible || boot.demo) return;
+    let alive = true;
+    const c = new AbortController();
+    async function load() {
+      if (document.hidden) return;
+      try {
+        const r = await fetch("/api/sales-calls?mode=session", {
+          signal: c.signal,
+        });
+        const d = await r.json();
+        if (!r.ok) throw Error(d.error);
+        if (alive) {
+          setData(d);
+          setError("");
+        }
+      } catch (e) {
+        if (alive) setError((e as Error).message);
       }
+    }
+    void load();
+    const t = setInterval(load, 30000);
+    window.addEventListener("calling-session-changed", load);
+    document.addEventListener("visibilitychange", load);
+    return () => {
+      alive = false;
+      c.abort();
+      clearInterval(t);
+      window.removeEventListener("calling-session-changed", load);
+      document.removeEventListener("visibilitychange", load);
+    };
+  }, [eligible, boot.demo]);
+  if (!eligible) return null;
+  async function run(p: unknown) {
+    setBusy(true);
+    try {
+      await act(p);
+      if ((p as any).action === "cancel")
+        window.dispatchEvent(new Event("calling-attempt-cancelled"));
+      window.dispatchEvent(new Event("calling-session-changed"));
+      setError("");
     } catch (e) {
-      setNotice((e as Error).message);
+      setError((e as Error).message);
     } finally {
       setBusy(false);
     }
   }
-  if (
-    boot.member.role !== "Admin" &&
-    (boot.member as any).job_role !== "Sales rep"
-  )
-    return null;
   return (
     <details className="calling-session">
       <summary>
-        Your calling session · {session ? "Active" : "Start session"}
+        Your calling session · {data.sessions.length ? "Active" : "Ready"}
       </summary>
       <p>
-        {session
-          ? `Active until ${new Date(session.expires_at).toLocaleTimeString()}`
-          : "Start a session so shared-Quo calls can be credited to you."}
+        Use Call in Quo to register a call before opening the desktop app.
+        Unmatched calls stay unassigned.
       </p>
-      <div className="flex wrap">
-        <button
-          type="button"
-          disabled={busy}
-          onClick={() => run(session ? "stop" : "start")}
-        >
-          {session ? "End session" : "Start calling session"}
+      {data.sessions.length > 0 && (
+        <button disabled={busy} onClick={() => void run({ action: "stop" })}>
+          End session
         </button>
-        {lead && session && (
-          <button
-            type="button"
-            disabled={busy || !!lead.archived_at}
-            onClick={() => run("attempt")}
-          >
-            Register call to this lead
-          </button>
-        )}
-        {ready && (
-          <a
-            className="button primary"
-            href={
-              lead?.phone
-                ? "tel:" + lead.phone.replace(/[^+\d]/g, "")
-                : "quo://"
-            }
-          >
-            Open Quo app
-          </a>
-        )}
-      </div>
-      {lead && (
-        <p className="fine">
-          Register before calling {lead.phone}. One registration matches at most
-          one call. Calls outside the window or with competing matches remain
-          unassigned.
-        </p>
       )}
-      {notice && <p role="status">{notice}</p>}
+      {data.attempts.map((a: any) => (
+        <div key={a.id}>
+          <span>Pending call · {a.phone}</span>
+          <button
+            disabled={busy}
+            onClick={() => void run({ action: "cancel", attempt_id: a.id })}
+          >
+            Cancel unused attempt
+          </button>
+        </div>
+      ))}
+      {error && <p role="alert">{error}</p>}
     </details>
   );
 }
@@ -280,11 +260,18 @@ export default function SalesKpis({
         {reps.map((m) => {
           const calls = data.calls.filter((c: any) => c.rep === m.email);
           const count = (outcome: string) =>
-            calls.filter((c: any) => c.outcome === outcome).length;
+            calls.filter(
+              (c: any) =>
+                (c.disposition && outcomes.indexOf(outcome) < 5
+                  ? c.disposition
+                  : c.outcome) === outcome,
+            ).length;
           const humans = calls.filter((c: any) =>
-            ["Spoke to person", "Meeting booked", "Qualified"].includes(
-              c.outcome,
-            ),
+            c.disposition
+              ? c.disposition === "Spoke to person"
+              : ["Spoke to person", "Meeting booked", "Qualified"].includes(
+                  c.outcome,
+                ),
           ).length;
           return (
             <article key={m.email}>
@@ -292,7 +279,13 @@ export default function SalesKpis({
               <p>
                 <strong>{calls.length}</strong> calls ·{" "}
                 <strong>
-                  {new Set(calls.map((c: any) => c.lead_id)).size}
+                  {
+                    new Set(
+                      calls
+                        .filter((c: any) => c.lead_id)
+                        .map((c: any) => c.lead_id),
+                    ).size
+                  }
                 </strong>{" "}
                 unique leads
               </p>
@@ -371,6 +364,20 @@ export default function SalesKpis({
         Creator attribution starts with recorded CRM creators; imported leads
         without a known creator are not guessed.
       </p>
+      <section className="panel">
+        <h3>Data coverage</h3>
+        <p>
+          {data.calls.length} provider calls ·{" "}
+          {data.calls.filter((c: any) => c.lead_id).length} linked to leads ·{" "}
+          {data.calls.filter((c: any) => c.rep).length} attributed to a rep ·{" "}
+          {data.calls.filter((c: any) => c.outcome).length} confirmed outcomes
+        </p>
+        <p>
+          {data.generators.filter((l: any) => !l.created_by).length} leads in
+          this period have no recorded creator. They are excluded from
+          individual generator credit.
+        </p>
+      </section>
       <h3>Call outcomes & unassigned review ({unassigned.length})</h3>
       <div className="sales-call-list">
         {data.calls.map((c: any) => (
@@ -396,48 +403,50 @@ export default function SalesKpis({
             )}
             {c.rep &&
               (c.rep === boot.member.email || boot.member.role === "Admin") && (
-                <select
-                  aria-label={"Confirm outcome for " + c.id}
-                  disabled={busy}
-                  value={c.outcome || ""}
-                  onChange={(e) => {
-                    if (e.target.value)
-                      void run({
-                        action: "outcome",
-                        call_id: c.id,
-                        outcome: e.target.value,
-                      });
-                  }}
-                >
-                  <option value="">Confirm sales outcome…</option>
-                  {outcomes.map((o) => (
-                    <option key={o}>{o}</option>
-                  ))}
-                </select>
+                <details>
+                  <summary>Confirm outcome</summary>
+                  <CallOutcome id={c.id} onSaved={() => void load()} />
+                </details>
               )}
-            {!c.rep && boot.member.role === "Admin" && c.lead_id && (
-              <select
-                aria-label={"Assign caller for " + c.id}
-                disabled={busy}
-                defaultValue=""
-                onChange={(e) => {
-                  if (e.target.value)
+            {boot.member.role === "Admin" && c.lead_id && (
+              <details>
+                <summary>{c.rep ? "Correct caller" : "Assign caller"}</summary>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const f = new FormData(e.currentTarget);
                     void run({
                       action: "assign",
                       call_id: c.id,
-                      rep: e.target.value,
+                      rep: f.get("rep"),
+                      reason: f.get("reason"),
                     });
-                }}
-              >
-                <option value="">Admin: assign confirmed caller…</option>
-                {boot.members
-                  .filter((m) => m.active && m.job_role === "Sales rep")
-                  .map((m) => (
-                    <option key={m.email} value={m.email}>
-                      {m.display_name}
-                    </option>
-                  ))}
-              </select>
+                  }}
+                >
+                  <select name="rep" required defaultValue={c.rep || ""}>
+                    <option value="">Choose verified caller</option>
+                    {boot.members
+                      .filter((m) => m.active && m.job_role === "Sales rep")
+                      .map((m) => (
+                        <option key={m.email} value={m.email}>
+                          {m.display_name}
+                        </option>
+                      ))}
+                  </select>
+                  <input
+                    name="reason"
+                    required
+                    minLength={5}
+                    maxLength={500}
+                    placeholder="Evidence for this attribution"
+                    aria-label="Attribution evidence"
+                  />
+                  <p className="fine">
+                    Changing attribution clears the previous confirmed outcome.
+                  </p>
+                  <button disabled={busy}>Save attribution</button>
+                </form>
+              </details>
             )}
             {!c.lead_id && (
               <small>

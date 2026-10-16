@@ -82,6 +82,10 @@ export const memberSchema = z.object({
   role: z.enum(["Admin", "Agent"]),
   job_role: z.enum(["Lead generator", "Sales rep", "Other"]).optional(),
   active: z.boolean(),
+  can_export: z.boolean().optional(),
+  can_archive: z.boolean().optional(),
+  can_ai: z.boolean().optional(),
+  can_shared_sms: z.boolean().optional(),
   aliases: z
     .array(z.string().trim().toLowerCase().max(200))
     .max(30)

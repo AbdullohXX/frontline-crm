@@ -1,9 +1,12 @@
+import { can } from "@/lib/capabilities";
+import { HttpError } from "@/lib/auth";
 import { authorized } from "@/lib/auth";
 import { failure } from "@/lib/http";
 import Papa from "papaparse";
 export async function GET() {
   try {
-    const { db } = await authorized();
+    const { db,member } = await authorized();
+    if(!can(member,"export"))throw new HttpError("Export permission required",403);
     const rows: Record<string, unknown>[] = [];
     for (let offset = 0; ; offset += 1000) {
       const { data, error } = await db

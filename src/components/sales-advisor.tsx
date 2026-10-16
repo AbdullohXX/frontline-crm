@@ -14,6 +14,7 @@ export default function SalesAdvisor({
   onLead: (id: string) => void;
 }) {
   const [report, setReport] = useState<any>(null),
+    [allowed, setAllowed] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [configured, setConfigured] = useState<boolean | null>(null);
@@ -24,6 +25,7 @@ export default function SalesAdvisor({
       .then((d) => {
         if (alive) {
           setConfigured(d.configured === true);
+          setAllowed(d.canAnalyze === true);
           if (d.report) setReport(d.report);
         }
       })
@@ -63,12 +65,17 @@ export default function SalesAdvisor({
         </div>
         <button
           className="primary"
-          disabled={busy || configured !== true || !from || !to}
+          disabled={!allowed || busy || configured !== true || !from || !to}
           onClick={analyze}
         >
           {busy ? "Analyzing sales…" : "Analyze sales"}
         </button>
       </div>
+      {!allowed && (
+        <p className="fine">
+          An administrator can enable AI analysis in your team permissions.
+        </p>
+      )}
       <p className="fine">
         Uses the Analytics date, owner and source filters. Sends approved CRM
         note and call excerpts to Vercel AI Gateway; direct phone/email details

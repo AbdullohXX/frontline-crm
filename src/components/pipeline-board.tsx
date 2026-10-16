@@ -5,12 +5,14 @@ import { callingInfo } from "@/lib/workflow";
 
 type Lane = { rows: Lead[]; total: number; page: number };
 export default function PipelineBoard({
+  canMove = true,
   filters,
   revision,
   members,
   onOpen,
   onMove,
 }: {
+  canMove?: boolean;
   filters: string;
   revision: number;
   members: Member[];
@@ -89,7 +91,7 @@ export default function PipelineBoard({
     }
   }
   async function move(lead: Lead, next: string) {
-    if (lead.stage === next || pending.current.has(lead.id)) return;
+    if (!canMove || lead.stage === next || pending.current.has(lead.id)) return;
     if (next === "Lost") {
       await onMove(lead, next);
       return;
@@ -195,7 +197,7 @@ export default function PipelineBoard({
                     className="deal-card"
                     key={lead.id}
                     aria-busy={busy.includes(lead.id)}
-                    draggable={!busy.includes(lead.id)}
+                    draggable={canMove && !busy.includes(lead.id)}
                     onDragStart={(e) =>
                       e.dataTransfer.setData("text/plain", lead.id)
                     }
@@ -244,7 +246,7 @@ export default function PipelineBoard({
                       <select
                         aria-label={"Stage for " + lead.company}
                         value={lead.stage}
-                        disabled={busy.includes(lead.id)}
+                        disabled={!canMove || busy.includes(lead.id)}
                         onChange={(e) => void move(lead, e.target.value)}
                       >
                         {STAGES.map((s) => (

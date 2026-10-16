@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     if (error || !media) throw Error("Attachment not available.");
     const { data, error: storageError } = await db.storage
       .from("lead-media")
-      .createSignedUrl(media.path, 3600);
+      .createSignedUrl(media.path, 300);
     if (storageError || !data) throw Error("Media is currently unavailable.");
     return new Response(null, {
       status: 307,

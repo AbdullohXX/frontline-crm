@@ -2492,3 +2492,7 @@ td input[type="checkbox"] {
 }
 .incoming-call-alert p { margin: .5rem 0; }
 .incoming-call-alert button { margin: .25rem .5rem 0 0; }
+
+.tracked-call{display:inline-flex;align-items:center;gap:.4rem;flex-wrap:wrap}.tracked-call small{max-width:20rem}.handoff-inbox{min-width:0}
+
+.lead-workflow-tools{display:grid;gap:.5rem;margin:1rem 0}.lead-workflow-tools details{margin:0;padding:.65rem;min-width:0}.lead-workflow-tools form{display:grid;gap:.5rem;margin-top:.5rem}.lead-workflow-tools input,.lead-workflow-tools select{width:100%;min-width:0}

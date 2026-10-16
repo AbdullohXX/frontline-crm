@@ -25,11 +25,19 @@ export type Member = {
   role: "Admin" | "Agent";
   active: boolean;
   aliases: string[];
+  can_export?: boolean;
+  can_archive?: boolean;
+  can_ai?: boolean;
+  can_shared_sms?: boolean;
   job_role?: "Lead generator" | "Sales rep" | "Other";
 };
 export type Lead = {
   id: string;
   legacy_id: string | null;
+  sales_assignee?: string | null;
+  handoff_status?: string;
+  handoff_at?: string | null;
+  handoff_note?: string;
   company: string;
   contact: string;
   job_title: string;

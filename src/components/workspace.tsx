@@ -1,4 +1,8 @@
 "use client";
+import { can } from "@/lib/capabilities";
+import HandoffInbox from "./handoff-inbox";
+import Handoff from "./handoff";
+import TrackedCall from "./tracked-call";
 import Image from "next/image";
 import IncomingCalls from "./incoming-calls";
 import PipelineBoard from "./pipeline-board";
@@ -887,7 +891,14 @@ export default function Workspace() {
     }
   }
   async function move(l: Lead, next: string) {
-    if (next === l.stage || pending.current.has(l.id) || l.archived_at) return;
+    if (
+      !boot ||
+      !can(boot!.member, "sales") ||
+      next === l.stage ||
+      pending.current.has(l.id) ||
+      l.archived_at
+    )
+      return;
     if (next === "Lost") {
       openLead(l);
       setDrawerTab("details");
@@ -1156,7 +1167,12 @@ export default function Workspace() {
           <select
             aria-label={"Stage for " + l.company}
             value={l.stage}
-            disabled={pendingIds.includes(l.id) || !!l.archived_at}
+            aria-readonly={!can(boot!.member, "sales")}
+            disabled={
+              !can(boot!.member, "sales") ||
+              pendingIds.includes(l.id) ||
+              !!l.archived_at
+            }
             onChange={(e) => move(l, e.target.value)}
           >
             {STAGES.map((st) => (
@@ -1187,15 +1203,16 @@ export default function Workspace() {
               <a href={"mailto:" + encodeURIComponent(l.email)}>Email</a>
             )}
             {l.phone && (
-              <a
-                href={"tel:" + l.phone.replace(/[^+\d]/g, "")}
-                aria-label={"Open Quo for " + l.company}
-              >
-                Quo
-              </a>
+              <TrackedCall
+                boot={boot!}
+                leadId={l.id}
+                phone={l.phone}
+                disabled={!!l.archived_at}
+              />
             )}
             <RowActions
               company={l.company}
+              canArchive={can(boot!.member, "archive")}
               archived={!!l.archived_at}
               disabled={pendingIds.includes(l.id)}
               onEdit={() => openLead(l, "details")}
@@ -1442,7 +1459,7 @@ export default function Workspace() {
                 New lead
               </button>
             )}
-            {view === "leads" && (
+            {view === "leads" && can(boot.member, "export") && (
               <a
                 href={boot.demo ? "#" : "/api/export"}
                 className="button"
@@ -1823,6 +1840,10 @@ export default function Workspace() {
           )}
           {view === "day" && (
             <div className="day-layout">
+              <HandoffInbox
+                boot={boot}
+                onOpen={(l) => openLead(l, "details")}
+              />
               <section className="panel">
                 <div className="panel-head">
                   <div>
@@ -1995,6 +2016,7 @@ export default function Workspace() {
                 {!archived && (
                   <>
                     <select
+                      disabled={!can(boot.member, "sales")}
                       aria-label="Bulk stage"
                       value={bulkStage}
                       onChange={(e) => setBulkStage(e.target.value)}
@@ -2015,6 +2037,7 @@ export default function Workspace() {
                     )}
                     <button
                       disabled={
+                        !can(boot.member, "sales") ||
                         !checked.length ||
                         !bulkStage ||
                         !!pendingIds.length ||
@@ -2049,7 +2072,11 @@ export default function Workspace() {
                   </>
                 )}
                 <button
-                  disabled={!checked.length || !!pendingIds.length}
+                  disabled={
+                    !can(boot.member, "archive") ||
+                    !checked.length ||
+                    !!pendingIds.length
+                  }
                   onClick={() =>
                     changeLeads(selectionRows, archived ? "restore" : "archive")
                   }
@@ -2101,6 +2128,7 @@ export default function Workspace() {
           )}
           {view === "pipeline" && (
             <PipelineBoard
+              canMove={can(boot.member, "sales")}
               filters={new URLSearchParams({
                 search: query,
                 scope: scope === "mine" ? "mine" : "",
@@ -2208,15 +2236,12 @@ export default function Workspace() {
                                 <Copy size={15} />
                                 Copy number
                               </button>
-                              <a
-                                className="button purple"
-                                href={
-                                  "tel:" +
-                                  phoneLead.phone.replace(/[^+\d]/g, "")
-                                }
-                              >
-                                Open Quo <ArrowUpRight size={15} />
-                              </a>
+                              <TrackedCall
+                                boot={boot!}
+                                leadId={phoneLead.id}
+                                phone={phoneLead.phone}
+                                disabled={!!phoneLead.archived_at}
+                              />
                               <button
                                 className="primary"
                                 onClick={() => {
@@ -2224,7 +2249,7 @@ export default function Workspace() {
                                   setComposerMode("activity");
                                 }}
                               >
-                                Record outcome <ArrowRight size={15} />
+                                Log manual activity <ArrowRight size={15} />
                               </button>
                               <button
                                 onClick={() =>
@@ -2410,6 +2435,40 @@ export default function Workspace() {
                       <option value="Lead generator">Lead generator</option>
                       <option value="Sales rep">Sales rep</option>
                     </select>
+                  </Field>
+                  <Field label="Additional permissions" full>
+                    {(
+                      [
+                        "can_export",
+                        "can_archive",
+                        "can_ai",
+                        "can_shared_sms",
+                      ] as const
+                    ).map((key, i) => (
+                      <label key={key}>
+                        <input
+                          type="checkbox"
+                          disabled={teamDraft.role === "Admin"}
+                          checked={
+                            teamDraft.role === "Admin" || !!teamDraft[key]
+                          }
+                          onChange={(e) =>
+                            setTeamDraft({
+                              ...teamDraft,
+                              [key]: e.target.checked,
+                            })
+                          }
+                        />
+                        {
+                          [
+                            "Export leads",
+                            "Archive / restore leads",
+                            "Run AI sales analysis",
+                            "Send from approved shared Quo numbers (sales reps)",
+                          ][i]
+                        }
+                      </label>
+                    ))}
                   </Field>
                   <Field label="Legacy owner aliases (comma separated)" full>
                     <input
@@ -2628,18 +2687,14 @@ export default function Workspace() {
                 </a>
               )}
               {selected.phone && (
-                <a
-                  className="button"
-                  href={"tel:" + selected.phone.replace(/[^+\d]/g, "")}
-                >
-                  Open Quo app <Phone size={14} />
-                </a>
+                <TrackedCall
+                  boot={boot!}
+                  leadId={selected.id}
+                  phone={selected.phone}
+                  disabled={!!selected.archived_at}
+                />
               )}
             </div>
-          )}
-          {selected && <CallingSession boot={boot} lead={selected} />}
-          {selected && (
-            <CallScript lead={selected} agent={boot.member.display_name} />
           )}
           <div className="drawer-tabs">
             <button
@@ -2771,6 +2826,7 @@ export default function Workspace() {
                   <div className="section-label">OPPORTUNITY</div>
                   <Field label="Stage">
                     <select
+                      disabled={!can(boot!.member, "sales")}
                       value={draft.stage}
                       onChange={(e) =>
                         update("stage", e.target.value as Lead["stage"])
@@ -2786,6 +2842,7 @@ export default function Workspace() {
                       type="number"
                       min={0}
                       step="0.01"
+                      disabled={!can(boot!.member, "sales")}
                       value={draft.value}
                       onChange={(e) => update("value", Number(e.target.value))}
                     />
@@ -2928,6 +2985,24 @@ export default function Workspace() {
             {drawerTab === "activity" && selected && (
               <>
                 <LeadSummary
+                  workflowTools={
+                    <>
+                      <CallingSession boot={boot} lead={selected} />
+                      <Handoff
+                        boot={boot}
+                        lead={selected}
+                        onSaved={(l) => {
+                          setSelected(l);
+                          setDraft(l);
+                          void load(true);
+                        }}
+                      />
+                      <CallScript
+                        lead={selected}
+                        agent={boot.member.display_name}
+                      />
+                    </>
+                  }
                   lead={selected}
                   boot={boot}
                   contactDisabled={dirty || chatDirty || saving}

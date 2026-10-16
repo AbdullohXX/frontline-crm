@@ -22,7 +22,12 @@ export function phone(value: unknown, country = "") {
   let d = value.replace(/[^0-9]/g, "");
   if (
     d.length === 10 &&
-    /^(us|usa|united states|united states of america|ca|canada)$/i.test(country)
+    /^(U S A|U S|USA|US|UNITED STATES OF AMERICA|UNITED STATES|CA|CANADA)( |$)/.test(
+      country
+        .toUpperCase()
+        .replace(/[^A-Z]+/g, " ")
+        .trim(),
+    )
   )
     d = "1" + d;
   return /^[1-9][0-9]{6,14}$/.test(d) ? d : "";

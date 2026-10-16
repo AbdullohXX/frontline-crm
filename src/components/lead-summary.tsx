@@ -1,8 +1,10 @@
 "use client";
+import TrackedCall from "./tracked-call";
 import { STAGES, type Bootstrap, type Lead } from "@/lib/types";
 import { callingInfo } from "@/lib/workflow";
 import LeadContacts from "./lead-contacts";
 export default function LeadSummary({
+  workflowTools,
   lead,
   boot,
   onEdit,
@@ -13,6 +15,7 @@ export default function LeadSummary({
   contactDisabled,
   onContactsSaved,
 }: {
+  workflowTools?: React.ReactNode;
   lead: Lead;
   boot: Bootstrap;
   onEdit: () => void;
@@ -45,12 +48,12 @@ export default function LeadSummary({
         {lead.phone && (
           <div>
             <strong>{lead.phone}</strong>
-            <a
-              className="button"
-              href={"tel:" + lead.phone.replace(/[^+\d]/g, "")}
-            >
-              Open Quo app
-            </a>
+            <TrackedCall
+              boot={boot}
+              leadId={lead.id}
+              phone={lead.phone}
+              disabled={!!lead.archived_at}
+            />
           </div>
         )}
       </div>
@@ -58,6 +61,7 @@ export default function LeadSummary({
         {call.label} {call.time} ·{" "}
         {call.open ? "Calling window open" : "Check local calling time"}
       </p>
+      <div className="lead-workflow-tools">{workflowTools}</div>
       <section className="next-step-card">
         <span className="eyebrow">Next step</span>
         <h3>{lead.next_action || "Plan the next conversation"}</h3>
@@ -147,6 +151,7 @@ export default function LeadSummary({
       </ol>
       <button onClick={onEdit}>Edit lead details</button>
       <LeadContacts
+        boot={boot}
         lead={lead.id}
         demo={boot.demo}
         archived={!!lead.archived_at}

@@ -1,4 +1,6 @@
 import { generateText, Output } from "ai";
+import { can } from "@/lib/capabilities";
+import { HttpError } from "@/lib/auth";
 import { authorized, localDemo } from "@/lib/auth";
 import { json, failure, body, sameOrigin } from "@/lib/http";
 import {
@@ -28,6 +30,7 @@ export async function GET() {
     return json({
       report: data?.report || null,
       configured: !!process.env.AI_GATEWAY_MODEL,
+      canAnalyze: can(member, "ai"),
     });
   } catch (e) {
     return failure(e);
@@ -47,6 +50,8 @@ export async function POST(request: Request) {
       );
     sameOrigin(request);
     const auth = await authorized();
+    if (!can(auth.member, "ai"))
+      throw new HttpError("AI analysis permission required", 403);
     db = auth.db;
     const p = z
       .object({

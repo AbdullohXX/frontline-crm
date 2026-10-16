@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useId, useRef } from "react";
 export default function RowActions({
+  canArchive = true,
   company,
   archived,
   disabled,
@@ -8,6 +9,7 @@ export default function RowActions({
   onHistory,
   onArchive,
 }: {
+  canArchive?: boolean;
   company: string;
   archived: boolean;
   disabled: boolean;
@@ -72,7 +74,7 @@ export default function RowActions({
         </button>
         <button
           type="button"
-          disabled={disabled}
+          disabled={disabled || !canArchive}
           onClick={() => run(onArchive)}
         >
           {archived ? "Restore" : "Archive"}

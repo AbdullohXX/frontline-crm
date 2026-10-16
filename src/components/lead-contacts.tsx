@@ -1,4 +1,6 @@
 "use client";
+import type { Bootstrap } from "@/lib/types";
+import TrackedCall from "./tracked-call";
 import { useEffect, useState } from "react";
 type Contact = {
   id: string;
@@ -10,6 +12,7 @@ type Contact = {
   archived_at: string | null;
 };
 export default function LeadContacts({
+  boot,
   lead,
   demo,
   archived,
@@ -18,6 +21,7 @@ export default function LeadContacts({
   onBusy,
   onSaved,
 }: {
+  boot: Bootstrap;
   lead: string;
   demo: boolean;
   archived: boolean;
@@ -122,12 +126,12 @@ export default function LeadContacts({
             {c.phone && (
               <div>
                 <span>{c.phone}</span>
-                <a
-                  className="button"
-                  href={"tel:" + c.phone.replace(/[^+\d]/g, "")}
-                >
-                  Open Quo
-                </a>
+                <TrackedCall
+                  boot={boot}
+                  leadId={lead}
+                  phone={c.phone}
+                  disabled={archived || !!c.archived_at}
+                />
               </div>
             )}
             <div className="flex wrap">
