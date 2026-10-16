@@ -1840,10 +1840,6 @@ export default function Workspace() {
           )}
           {view === "day" && (
             <div className="day-layout">
-              <HandoffInbox
-                boot={boot}
-                onOpen={(l) => openLead(l, "details")}
-              />
               <section className="panel">
                 <div className="panel-head">
                   <div>
@@ -1910,7 +1906,11 @@ export default function Workspace() {
                 )}
                 {pagination}
               </section>
-              <div>
+              <div className="day-sidebar">
+                <HandoffInbox
+                  boot={boot}
+                  onOpen={(l) => openLead(l, "details")}
+                />
                 <section className="panel quick-queues">
                   <h3>Work queues</h3>
                   <button
