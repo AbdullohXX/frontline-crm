@@ -319,6 +319,49 @@ test("role and verified workflow regressions", async () => {
       () => rpc("save_profile", { avatar_color: "red;bad", avatar_image: "" }),
       /check constraint/,
     );
+    await db.exec("reset role");
+    await db.exec(
+      fs.readFileSync(
+        root +
+          "supabase/migrations/20261016172327_verified_email_lead_insights.sql",
+        "utf8",
+      ),
+    );
+    await identity(1);
+    await rpc("save_lead_contact", {
+      lead_id: lead.id,
+      name: "Buyer",
+      email: "buyer@example.test",
+      phone: "",
+    });
+    await db.exec("reset role;set role anon");
+    const verified = {
+      id: "mail-proof-1",
+      recipients: ["BUYER@example.test"],
+      subject: "Verified contact test",
+      sent_at: new Date().toISOString(),
+    };
+    assert.equal(await server("gmail", [verified]), 1);
+    assert.equal(await server("gmail", [verified]), 0);
+    await assert.rejects(
+      () =>
+        db.query(
+          "insert into public.verified_sent_emails(sender,message_id,lead_id,recipient,sent_at) values('rep@frontline-x.com','fake',$1,'buyer@example.test',now())",
+          [lead.id],
+        ),
+      /permission/,
+    );
+    await identity(3);
+    const evidence = (
+      await db.query(
+        "select * from public.verified_sent_emails where lead_id=$1",
+        [lead.id],
+      )
+    ).rows;
+    assert.equal(evidence.length, 1);
+    assert.equal(evidence[0].sender, "rep@frontline-x.com");
+    assert.equal(evidence[0].recipient, "buyer@example.test");
+    await assert.rejects(() => rpc("import_gmail", [verified]), /permission/);
     console.log(
       "PASS: handoff, capabilities, caller matching, cancel, outcomes, revocation, verified Gmail, sync leases, shared numbers, timezone boundaries",
     );

@@ -1,4 +1,5 @@
 "use client";
+import LeadInsight from "./lead-insight";
 import MemberIdentity from "./member-identity";
 import TrackedCall from "./tracked-call";
 import { STAGES, type Bootstrap, type Lead } from "@/lib/types";
@@ -53,6 +54,7 @@ export default function LeadSummary({
         onBusy={onContactBusy}
         onSaved={onContactsSaved}
       />
+      <LeadInsight lead={lead} boot={boot} />
       <p className={call.open ? "calling-open" : "muted"}>
         {call.label} {call.time} ·{" "}
         {call.open ? "Calling window open" : "Check local calling time"}
