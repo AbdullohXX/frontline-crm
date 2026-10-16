@@ -710,6 +710,7 @@ export default function Workspace() {
     setSelected(l);
     setDraft(l ? { ...l } : emptyLead(boot!.member.email));
     setDrawerTab(l ? tab : "details");
+    setRecordTab(complete ? "activities" : "catchup");
     setComposerMode(complete ? "activity" : "note");
     setDirty(false);
     setDrawerError("");
@@ -2276,6 +2277,7 @@ export default function Workspace() {
                                 className="primary"
                                 onClick={() => {
                                   openLead(phoneLead, "activity");
+                                  setRecordTab("activities");
                                   setComposerMode("activity");
                                 }}
                               >
