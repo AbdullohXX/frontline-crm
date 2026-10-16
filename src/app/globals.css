@@ -2506,3 +2506,29 @@ td input[type="checkbox"] {
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.lane[data-stage="Follow-up 1"]{--stage-color:#79b8bb}.lane[data-stage="Follow-up 2"]{--stage-color:#e0b365}.lane[data-stage="Follow-up 3"]{--stage-color:#da8c79}.call-suggestion{grid-column:1/-1;background:var(--panel);border:1px solid var(--border);padding:.75rem;border-radius:10px}.call-suggestion p{margin:.5rem 0}.additional-contacts{margin-top:1rem}
 
 .lead-insight-card{margin:1rem 0;padding:1rem;border:1px solid var(--border);border-left:3px solid var(--accent,#a78bfa);border-radius:12px;background:var(--panel)}.lead-insight-card h3{margin:.5rem 0}.lead-insight-card p{margin:.6rem 0;line-height:1.5}.lead-insight-card small{display:block;color:var(--muted);font-size:.75rem;margin:.4rem 0}.outreach-checklist{list-style:none;padding:0;display:grid;gap:.6rem;margin:1rem 0}.outreach-checklist li{padding:.65rem;border:1px solid var(--border);border-radius:8px}.outreach-checklist li[data-done="true"]{border-left:3px solid #65bc94}.lead-insight-card .flex{gap:.4rem;margin:.7rem 0}
+/* Record workspace: identity, working area, related people. */
+.app .record-layout {display:grid;grid-template-columns:minmax(250px,.8fr) minmax(420px,1.8fr) minmax(280px,.9fr);overflow:hidden;}
+.record-layout > .lead-edit-pane {padding:22px;min-width:0;overflow:auto;}
+.record-company-mark {width:48px;height:48px;display:grid;place-items:center;border-radius:14px;background:var(--accent);color:var(--bg);font-weight:800;margin-bottom:14px;}
+.record-layout .lead-summary > h3 {font-size:22px;margin:0 0 6px;}
+.record-layout .lead-summary > .muted {margin-bottom:20px;}
+.record-layout .summary-facts > div {padding:12px 0;border-bottom:1px solid var(--border);}
+.record-layout .stage-progress {display:flex;flex-wrap:wrap;gap:6px;}
+.record-center {display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden;background:var(--panel);}
+.record-center-tabs {display:flex;gap:24px;padding:0 24px;border-bottom:1px solid var(--border);flex:none;}
+.record-center-tabs button {border:0;border-radius:0;background:transparent;padding:16px 2px;border-bottom:3px solid transparent;}
+.record-center-tabs button[aria-pressed="true"] {border-bottom-color:var(--accent);font-weight:750;}
+.record-catchup {overflow:auto;padding:26px;min-height:0;}
+.record-section-heading h2 {font-size:23px;margin:10px 0;}
+.record-context-card {border:1px solid var(--border);border-radius:12px;padding:20px;margin:16px 0;}
+.record-context-card p {margin:12px 0;line-height:1.5;}
+.record-activity-panel {display:flex;flex:1;min-height:0;overflow:hidden;}
+.record-activity-panel > .lead-conversation {flex:1;min-width:0;}
+.record-center [hidden] {display:none!important;}
+.record-related {overflow:auto;min-height:0;min-width:0;padding:22px;border-left:1px solid var(--border);}
+.record-related-content > h3 {font-size:14px;margin:0 0 20px;}
+.record-related .lead-workflow-tools {display:grid;gap:14px;margin-top:20px;}
+@media(max-width:1200px) {.app .record-layout {grid-template-columns:280px minmax(0,1fr);overflow:auto;}.record-related {grid-column:1/-1;overflow:visible;border-top:1px solid var(--border);}.record-layout > .lead-edit-pane,.record-layout > .record-center {min-height:650px;}.record-related-content {display:grid;grid-template-columns:1fr 1fr;gap:20px;}.record-related-content > h3 {grid-column:1/-1;}}
+@media(max-width:760px) {.app .record-layout {display:flex;flex-direction:column;overflow:auto;}.record-layout > .lead-edit-pane {min-height:0;overflow:visible;flex:none;}.record-layout > .record-center {min-height:700px;flex:none;}.record-related-content {display:block;}.record-catchup {padding:18px;}.record-related {flex:none;}}
+.record-company-mark {background:var(--accent,#b7a5ff);color:#211a36;}
+.record-center-tabs button[aria-pressed="true"] {border-bottom-color:var(--accent,#b7a5ff);}

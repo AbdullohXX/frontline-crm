@@ -1,12 +1,11 @@
 "use client";
-import LeadInsight from "./lead-insight";
 import MemberIdentity from "./member-identity";
-import TrackedCall from "./tracked-call";
 import { STAGES, type Bootstrap, type Lead } from "@/lib/types";
 import { callingInfo } from "@/lib/workflow";
 import LeadContacts from "./lead-contacts";
 export default function LeadSummary({
   workflowTools,
+  relatedOnly = false,
   lead,
   boot,
   onEdit,
@@ -18,6 +17,7 @@ export default function LeadSummary({
   onContactsSaved,
 }: {
   workflowTools?: React.ReactNode;
+  relatedOnly?: boolean;
   lead: Lead;
   boot: Bootstrap;
   onEdit: () => void;
@@ -35,31 +35,41 @@ export default function LeadSummary({
     />
   );
   const call = callingInfo(lead);
+  if (relatedOnly)
+    return (
+      <div className="record-related-content">
+        <h3>People & workflow</h3>{" "}
+        <LeadContacts
+          boot={boot}
+          lead={lead.id}
+          primary={lead}
+          demo={boot.demo}
+          archived={!!lead.archived_at}
+          disabled={contactDisabled}
+          onDirty={onContactDirty}
+          onBusy={onContactBusy}
+          onSaved={onContactsSaved}
+        />
+        <p className={call.open ? "calling-open" : "muted"}>
+          {call.label} {call.time} ·{" "}
+          {call.open ? "Calling window open" : "Check local calling time"}
+        </p>
+        <div className="lead-workflow-tools">{workflowTools}</div>
+      </div>
+    );
   return (
     <div className="lead-summary">
+      <div className="record-company-mark" aria-hidden="true">
+        {lead.company.slice(0, 2).toUpperCase()}
+      </div>
+      <h3>{lead.company}</h3>
+      <p className="muted">{lead.contact || "Company record"}</p>
       <div className="flex between wrap">
         <span className="stage-badge" data-stage={lead.stage}>
           {lead.stage}
         </span>
         <button onClick={onCopyLink}>Copy lead link</button>
       </div>
-      <LeadContacts
-        boot={boot}
-        lead={lead.id}
-        primary={lead}
-        demo={boot.demo}
-        archived={!!lead.archived_at}
-        disabled={contactDisabled}
-        onDirty={onContactDirty}
-        onBusy={onContactBusy}
-        onSaved={onContactsSaved}
-      />
-      <LeadInsight lead={lead} boot={boot} />
-      <p className={call.open ? "calling-open" : "muted"}>
-        {call.label} {call.time} ·{" "}
-        {call.open ? "Calling window open" : "Check local calling time"}
-      </p>
-      <div className="lead-workflow-tools">{workflowTools}</div>
       <section className="next-step-card">
         <span className="eyebrow">Next step</span>
         <h3>{lead.next_action || "Plan the next conversation"}</h3>

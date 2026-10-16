@@ -10,6 +10,7 @@ import IncomingCalls from "./incoming-calls";
 import PipelineBoard from "./pipeline-board";
 import RowActions from "./row-actions";
 import LeadSummary from "./lead-summary";
+import RecordCenter from "./record-center";
 import {
   viewState,
   viewFromUrl,
@@ -304,6 +305,7 @@ export default function Workspace() {
   );
   const [selected, setSelected] = useState<Lead | null>(null),
     [draft, setDraft] = useState<LeadInput | null>(null),
+    [recordTab, setRecordTab] = useState<"catchup" | "activities">("catchup"),
     [drawerTab, setDrawerTab] = useState<"details" | "activity">("details"),
     [drawerError, setDrawerError] = useState(""),
     [dirty, setDirty] = useState(false),
@@ -1179,9 +1181,7 @@ export default function Workspace() {
                   : l.stage_actor),
             )}
             name={
-              l.stage !== "New" && !l.stage_actor
-                ? "Unassigned"
-                : undefined
+              l.stage !== "New" && !l.stage_actor ? "Unassigned" : undefined
             }
           />
         </td>
@@ -2756,7 +2756,15 @@ export default function Workspace() {
             </button>
           </div>
         </div>
-        <div className={"drawer-body " + (selected ? "lead-full-layout" : "")}>
+        <div
+          className={
+            "drawer-body " +
+            (selected
+              ? "lead-full-layout " +
+                (drawerTab === "activity" ? "record-layout" : "")
+              : "")
+          }
+        >
           <fieldset className="lead-edit-pane" disabled={chatBusy || saving}>
             {drawerError && (
               <div className="error" role="alert">
@@ -3049,7 +3057,10 @@ export default function Workspace() {
                     }
                     setDrawerTab("details");
                   }}
-                  onActivity={() => setComposerMode("activity")}
+                  onActivity={() => {
+                    setRecordTab("activities");
+                    setComposerMode("activity");
+                  }}
                   onCopyLink={async () => {
                     try {
                       await navigator.clipboard.writeText(window.location.href);
@@ -3063,25 +3074,88 @@ export default function Workspace() {
             )}
           </fieldset>
           {selected && (
-            <LeadConversation
+            <RecordCenter
               key={selected.id}
-              activityForm={activityForm}
-              composerMode={composerMode}
-              onComposerMode={setComposerMode}
               lead={selected}
               boot={boot}
-              disabled={dirty || saving || contactDirty || contactBusy}
-              onDraftChange={setChatDirty}
-              onBusyChange={setChatBusy}
-              onSaved={(saved) => {
-                setSelected(saved);
-                setDraft({ ...saved });
-                listCache.current.clear();
-                reportAt.current = 0;
-                void load(true);
-                void loadHistory(saved);
-              }}
-            />
+              overview={drawerTab === "activity"}
+              busy={chatBusy}
+              tab={recordTab}
+              setTab={setRecordTab}
+            >
+              <LeadConversation
+                key={selected.id}
+                activityForm={activityForm}
+                composerMode={composerMode}
+                onComposerMode={setComposerMode}
+                lead={selected}
+                boot={boot}
+                disabled={dirty || saving || contactDirty || contactBusy}
+                onDraftChange={setChatDirty}
+                onBusyChange={setChatBusy}
+                onSaved={(saved) => {
+                  setSelected(saved);
+                  setDraft({ ...saved });
+                  listCache.current.clear();
+                  reportAt.current = 0;
+                  void load(true);
+                  void loadHistory(saved);
+                }}
+              />
+            </RecordCenter>
+          )}
+          {selected && drawerTab === "activity" && (
+            <aside className="record-related" aria-label="People and workflow">
+              <LeadSummary
+                relatedOnly
+                workflowTools={
+                  <>
+                    <CallingSession boot={boot} lead={selected} />
+                    <Handoff
+                      boot={boot}
+                      lead={selected}
+                      onSaved={(l) => {
+                        setSelected(l);
+                        setDraft(l);
+                        void load(true);
+                      }}
+                    />
+                    <CallScript
+                      lead={selected}
+                      agent={boot.member.display_name}
+                    />
+                  </>
+                }
+                lead={selected}
+                boot={boot}
+                contactDisabled={dirty || chatDirty || saving}
+                onContactDirty={setContactDirty}
+                onContactBusy={setContactBusy}
+                onContactsSaved={() => {
+                  void loadHistory(selected);
+                  window.dispatchEvent(new Event("lead-contact-saved"));
+                }}
+                onEdit={() => {
+                  if (dirty || contactDirty) {
+                    setDrawerError("Save this activity first.");
+                    return;
+                  }
+                  setDrawerTab("details");
+                }}
+                onActivity={() => {
+                  setRecordTab("activities");
+                  setComposerMode("activity");
+                }}
+                onCopyLink={async () => {
+                  try {
+                    await navigator.clipboard.writeText(window.location.href);
+                    setToast("Lead link copied.");
+                  } catch {
+                    setToast("Copy the address from your browser.");
+                  }
+                }}
+              />
+            </aside>
           )}
         </div>
       </dialog>
