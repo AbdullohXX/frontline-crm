@@ -1,5 +1,5 @@
 "use client";
-import type { Bootstrap } from "@/lib/types";
+import type { Bootstrap, Lead } from "@/lib/types";
 import TrackedCall from "./tracked-call";
 import { useEffect, useState } from "react";
 type Contact = {
@@ -12,6 +12,7 @@ type Contact = {
   archived_at: string | null;
 };
 export default function LeadContacts({
+  primary,
   boot,
   lead,
   demo,
@@ -21,6 +22,7 @@ export default function LeadContacts({
   onBusy,
   onSaved,
 }: {
+  primary?: Lead;
   boot: Bootstrap;
   lead: string;
   demo: boolean;
@@ -94,7 +96,7 @@ export default function LeadContacts({
   return (
     <section className="additional-contacts">
       <div className="flex between">
-        <h3>Additional contacts</h3>
+        <h3>People & contacts</h3>
         <button
           type="button"
           disabled={demo || archived || disabled || busy || !!draft}
@@ -105,6 +107,33 @@ export default function LeadContacts({
           Add contact
         </button>
       </div>
+      {primary && (
+        <details className="person-card">
+          <summary>
+            <strong>{primary.contact || "Primary contact"}</strong>
+            <small>{primary.job_title || "Primary contact"}</small>
+            <span>
+              {primary.phone} {primary.email}
+            </span>
+          </summary>
+          <div className="person-details">
+            <p>{primary.job_title}</p>
+            {primary.email && (
+              <a href={"mailto:" + primary.email}>{primary.email}</a>
+            )}
+            <p>{primary.phone}</p>
+            <TrackedCall
+              boot={boot}
+              leadId={lead}
+              phone={primary.phone}
+              disabled={archived}
+            />
+            <p>
+              {primary.company} · {primary.country}
+            </p>
+          </div>
+        </details>
+      )}
       {loading && <p role="status">Loading contacts…</p>}
       {error && (
         <p role="alert" className="error">
@@ -114,47 +143,56 @@ export default function LeadContacts({
       {rows
         .filter((c) => showArchived || !c.archived_at)
         .map((c) => (
-          <article key={c.id}>
-            <strong>{c.name}</strong>
-            <small>
-              {c.label}
-              {c.archived_at ? " · Archived" : ""}
-            </small>
-            {c.email && (
-              <a href={"mailto:" + encodeURIComponent(c.email)}>{c.email}</a>
-            )}
-            {c.phone && (
-              <div>
-                <span>{c.phone}</span>
-                <TrackedCall
-                  boot={boot}
-                  leadId={lead}
-                  phone={c.phone}
-                  disabled={archived || !!c.archived_at}
-                />
-              </div>
-            )}
-            <div className="flex wrap">
-              <button
-                type="button"
-                disabled={demo || archived || disabled || busy || !!draft}
-                onClick={() =>
-                  c.archived_at ? void save("restore", c) : setDraft(c)
-                }
-              >
-                {c.archived_at ? "Restore" : "Edit"}
-              </button>
-              {!c.archived_at && (
+          <details className="person-card" key={c.id}>
+            <summary>
+              <strong>{c.name}</strong>
+              <small>{c.label}</small>
+              <span>
+                {c.phone} {c.email}
+              </span>
+            </summary>
+            <div className="person-details">
+              <strong>{c.name}</strong>
+              <small>
+                {c.label}
+                {c.archived_at ? " · Archived" : ""}
+              </small>
+              {c.email && (
+                <a href={"mailto:" + encodeURIComponent(c.email)}>{c.email}</a>
+              )}
+              {c.phone && (
+                <div>
+                  <span>{c.phone}</span>
+                  <TrackedCall
+                    boot={boot}
+                    leadId={lead}
+                    phone={c.phone}
+                    disabled={archived || !!c.archived_at}
+                  />
+                </div>
+              )}
+              <div className="flex wrap">
                 <button
                   type="button"
                   disabled={demo || archived || disabled || busy || !!draft}
-                  onClick={() => void save("archive", c)}
+                  onClick={() =>
+                    c.archived_at ? void save("restore", c) : setDraft(c)
+                  }
                 >
-                  Archive contact
+                  {c.archived_at ? "Restore" : "Edit"}
                 </button>
-              )}
+                {!c.archived_at && (
+                  <button
+                    type="button"
+                    disabled={demo || archived || disabled || busy || !!draft}
+                    onClick={() => void save("archive", c)}
+                  >
+                    Archive contact
+                  </button>
+                )}
+              </div>
             </div>
-          </article>
+          </details>
         ))}
       {!loading && !rows.length && (
         <p className="muted">

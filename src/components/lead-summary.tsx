@@ -1,4 +1,5 @@
 "use client";
+import MemberIdentity from "./member-identity";
 import TrackedCall from "./tracked-call";
 import { STAGES, type Bootstrap, type Lead } from "@/lib/types";
 import { callingInfo } from "@/lib/workflow";
@@ -26,10 +27,12 @@ export default function LeadSummary({
   contactDisabled: boolean;
   onContactsSaved: () => void;
 }) {
-  const person = (email: string | null) =>
-    boot.members.find((m) => m.email === email)?.display_name ||
-    email ||
-    "Not recorded";
+  const person = (email: string | null) => (
+    <MemberIdentity
+      member={boot.members.find((m) => m.email === email)}
+      email={email}
+    />
+  );
   const call = callingInfo(lead);
   return (
     <div className="lead-summary">
@@ -39,24 +42,17 @@ export default function LeadSummary({
         </span>
         <button onClick={onCopyLink}>Copy lead link</button>
       </div>
-      <h3>{lead.contact || "Add a contact"}</h3>
-      <p className="muted">{lead.job_title || lead.company}</p>
-      <div className="contact-lines">
-        {lead.email && (
-          <a href={"mailto:" + encodeURIComponent(lead.email)}>{lead.email}</a>
-        )}
-        {lead.phone && (
-          <div>
-            <strong>{lead.phone}</strong>
-            <TrackedCall
-              boot={boot}
-              leadId={lead.id}
-              phone={lead.phone}
-              disabled={!!lead.archived_at}
-            />
-          </div>
-        )}
-      </div>
+      <LeadContacts
+        boot={boot}
+        lead={lead.id}
+        primary={lead}
+        demo={boot.demo}
+        archived={!!lead.archived_at}
+        disabled={contactDisabled}
+        onDirty={onContactDirty}
+        onBusy={onContactBusy}
+        onSaved={onContactsSaved}
+      />
       <p className={call.open ? "calling-open" : "muted"}>
         {call.label} {call.time} ·{" "}
         {call.open ? "Calling window open" : "Check local calling time"}
@@ -73,7 +69,13 @@ export default function LeadSummary({
       <dl className="summary-facts">
         <div>
           <dt>Responsible owner</dt>
-          <dd>{person(lead.owner_email)}</dd>
+          <dd>
+            {person(
+              lead.stage === "New"
+                ? lead.created_by || lead.owner_email
+                : lead.stage_actor || null,
+            )}
+          </dd>
         </div>
         <div>
           <dt>Created by</dt>
@@ -150,16 +152,6 @@ export default function LeadSummary({
         ))}
       </ol>
       <button onClick={onEdit}>Edit lead details</button>
-      <LeadContacts
-        boot={boot}
-        lead={lead.id}
-        demo={boot.demo}
-        archived={!!lead.archived_at}
-        disabled={contactDisabled}
-        onDirty={onContactDirty}
-        onBusy={onContactBusy}
-        onSaved={onContactsSaved}
-      />
     </div>
   );
 }

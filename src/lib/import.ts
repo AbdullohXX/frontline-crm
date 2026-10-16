@@ -21,6 +21,9 @@ const clean = (v: unknown) => {
   return s === "—" ? "" : s;
 };
 function canonical(v: string) {
+  if (["qualified", "proposal"].includes(v.toLowerCase()))
+    return "Meeting Booked";
+  if (["nurture", "not ready"].includes(v.toLowerCase())) return "Follow-up 1";
   const known = STAGES.find((s) => s.toLowerCase() === v.toLowerCase());
   if (known) return known;
   if (
@@ -33,7 +36,7 @@ function canonical(v: string) {
     ].includes(v.toLowerCase())
   )
     return "Contacted";
-  if (v.toLowerCase() === "not ready") return "Nurture";
+
   return "New";
 }
 function parsedDate(v: unknown, format: "ISO" | "MDY" | "DMY") {

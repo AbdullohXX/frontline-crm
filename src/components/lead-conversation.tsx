@@ -7,6 +7,7 @@ import {
   type ReactNode,
 } from "react";
 import { Paperclip, Send, RefreshCw, X, MessageSquare } from "lucide-react";
+import { Avatar } from "./member-identity";
 import QuoActivity from "./quo-activity";
 import QuoLeadTools from "./quo-lead-tools";
 import { browserDatabase } from "@/lib/supabase/client";
@@ -379,9 +380,12 @@ export default function LeadConversation({
                 }
               >
                 <div className="chat-author">
-                  <span className="chat-avatar">
-                    {event.actor_name.slice(0, 2).toUpperCase()}
-                  </span>
+                  <Avatar
+                    member={boot.members.find(
+                      (m) => m.email === event.actor_email,
+                    )}
+                    name={event.actor_name}
+                  />
                   <strong>
                     {event.actor_name}
                     {mine ? " · You" : ""}

@@ -1,5 +1,7 @@
 "use client";
 import { can } from "@/lib/capabilities";
+import MemberIdentity from "./member-identity";
+import ProfileEditor from "./profile-editor";
 import HandoffInbox from "./handoff-inbox";
 import Handoff from "./handoff";
 import TrackedCall from "./tracked-call";
@@ -837,7 +839,11 @@ export default function Workspace() {
     setLoading(false);
     const patch = (l: Lead): Lead =>
       action === "stage"
-        ? { ...l, stage: value as Lead["stage"] }
+        ? {
+            ...l,
+            stage: value as Lead["stage"],
+            stage_actor: boot!.member.email,
+          }
         : action === "work_status"
           ? { ...l, work_status: value }
           : l;
@@ -1123,7 +1129,11 @@ export default function Workspace() {
   ) : null;
   const leadRows = (list: Lead[]) =>
     list.map((l) => (
-      <tr key={l.id} aria-busy={pendingIds.includes(l.id)}>
+      <tr
+        key={l.id}
+        data-priority={l.priority}
+        aria-busy={pendingIds.includes(l.id)}
+      >
         <td>
           <input
             type="checkbox"
@@ -1160,8 +1170,20 @@ export default function Workspace() {
           </small>
         </td>
         <td>
-          {boot?.members.find((m) => m.email === l.owner_email)?.display_name ||
-            l.owner_email}
+          <MemberIdentity
+            member={boot?.members.find(
+              (m) =>
+                m.email ===
+                (l.stage === "New"
+                  ? l.created_by || l.owner_email
+                  : l.stage_actor),
+            )}
+            name={
+              l.stage !== "New" && !l.stage_actor
+                ? "Unassigned"
+                : undefined
+            }
+          />
         </td>
         <td>
           <select
@@ -1193,7 +1215,7 @@ export default function Workspace() {
           <small>{l.next_follow_up || "Unscheduled"}</small>
         </td>
         <td className="priority-column">
-          <span className={l.priority === "High" ? "priority" : ""}>
+          <span className="priority-badge" data-priority={l.priority}>
             {l.priority}
           </span>
         </td>
@@ -1377,9 +1399,17 @@ export default function Workspace() {
             ))}
         </nav>
         <div className="sidebar-footer">
-          <div className="avatar">
-            {boot.member.display_name.slice(0, 2).toUpperCase()}
-          </div>
+          <ProfileEditor
+            member={boot.member}
+            demo={boot.demo}
+            onSaved={(m) =>
+              setBoot({
+                ...boot,
+                member: m,
+                members: boot.members.map((x) => (x.email === m.email ? m : x)),
+              })
+            }
+          />
           <div>
             <strong>{boot.member.display_name}</strong>
             <small>{boot.member.role} · Company account</small>
@@ -2091,7 +2121,7 @@ export default function Workspace() {
                       {[
                         "Select",
                         "Company / contact",
-                        "Owner",
+                        "Responsible",
                         "Stage",
                         "Value",
                         "Next move",
@@ -2370,7 +2400,7 @@ export default function Workspace() {
                   {boot.members.map((m) => (
                     <div className="team-row" key={m.email}>
                       <div>
-                        <strong>{m.display_name}</strong>
+                        <MemberIdentity member={m} />
                         <small>{m.email}</small>
                         <small>
                           {m.role} · {m.job_role || "Other"} ·{" "}

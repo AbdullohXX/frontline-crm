@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import MemberIdentity from "./member-identity";
 import CallOutcome from "./call-outcome";
 import type { Bootstrap, Lead } from "@/lib/types";
 const outcomes = [
@@ -275,7 +276,9 @@ export default function SalesKpis({
           ).length;
           return (
             <article key={m.email}>
-              <h3>{m.display_name} · Sales rep</h3>
+              <h3>
+                <MemberIdentity member={m} /> · Sales rep
+              </h3>
               <p>
                 <strong>{calls.length}</strong> calls ·{" "}
                 <strong>
@@ -334,7 +337,9 @@ export default function SalesKpis({
           );
           return (
             <article key={m.email}>
-              <h3>{m.display_name}</h3>
+              <h3>
+                <MemberIdentity member={m} />
+              </h3>
               <p>
                 {leads.length} leads created ·{" "}
                 {leads.filter((l: any) => l.phone || l.email).length} with
@@ -343,13 +348,7 @@ export default function SalesKpis({
               <p>
                 {
                   leads.filter((l: any) =>
-                    [
-                      "Qualified",
-                      "Meeting Booked",
-                      "Proposal",
-                      "Negotiation",
-                      "Won",
-                    ].includes(l.stage),
+                    ["Meeting Booked", "Negotiation", "Won"].includes(l.stage),
                   ).length
                 }{" "}
                 currently qualified or further ·{" "}

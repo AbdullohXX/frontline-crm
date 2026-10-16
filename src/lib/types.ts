@@ -1,11 +1,11 @@
 export const STAGES = [
   "New",
   "Contacted",
-  "Qualified",
+  "Follow-up 1",
+  "Follow-up 2",
+  "Follow-up 3",
   "Meeting Booked",
-  "Proposal",
   "Negotiation",
-  "Nurture",
   "Won",
   "Lost",
 ] as const;
@@ -20,6 +20,8 @@ export const OUTCOMES = [
   "Other",
 ] as const;
 export type Member = {
+  avatar_color?: string;
+  avatar_image?: string;
   email: string;
   display_name: string;
   role: "Admin" | "Agent";
@@ -34,6 +36,7 @@ export type Member = {
 export type Lead = {
   id: string;
   legacy_id: string | null;
+  stage_actor?: string | null;
   sales_assignee?: string | null;
   handoff_status?: string;
   handoff_at?: string | null;

@@ -1,5 +1,8 @@
 import { authorized, localDemo } from "@/lib/auth";
 import { json, failure, sameOrigin, body } from "@/lib/http";
+import { suggestCall, tomorrowInZone } from "@/lib/call-suggestion";
+import { quoRequest } from "@/lib/quo";
+import { quoCallDetailsPath } from "@/lib/quo-details";
 import { z } from "zod";
 export async function GET(request: Request) {
   try {
@@ -38,7 +41,7 @@ export async function GET(request: Request) {
       const [event, claim] = await Promise.all([
         db
           .from("quo_events")
-          .select("id,lead_id,direction,status")
+          .select("id,lead_id,direction,status,payload")
           .eq("id", id)
           .eq("kind", "call")
           .maybeSingle(),
@@ -54,11 +57,33 @@ export async function GET(request: Request) {
       const { data: lead } = event.data.lead_id
         ? await db
             .from("leads")
-            .select("version,next_action,next_follow_up")
+            .select("version,next_action,next_follow_up,stage")
             .eq("id", event.data.lead_id)
             .maybeSingle()
         : { data: null };
+      const { data: settings } = await db
+        .from("crm_settings")
+        .select("time_zone")
+        .single();
+      const tomorrow = tomorrowInZone(
+        settings?.time_zone || "America/New_York",
+      );
+      if (
+        claim.data &&
+        (member.role === "Admin" || claim.data.rep === member.email) &&
+        !event.data.payload?.summary?.summary?.length
+      ) {
+        try {
+          const fresh = await quoRequest(quoCallDetailsPath(id));
+          event.data.payload = {
+            ...event.data.payload,
+            summary: fresh.data.summary,
+          };
+        } catch {}
+      }
       return json({
+        tomorrow,
+        suggestion: suggestCall(event.data, lead?.stage || "New", tomorrow),
         lead,
         claim: claim.data,
         canConfirm:

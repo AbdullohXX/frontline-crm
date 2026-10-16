@@ -98,9 +98,11 @@ export function advisorSnapshot(
         uniqueLeads: new Set(rows.map((c) => c.lead_id).filter(Boolean)).size,
         providerAnswered: rows.filter((c) => c.connected).length,
         humanContacts: rows.filter((c) =>
-          ["Spoke to person", "Meeting booked", "Qualified"].includes(
-            claimMap.get(c.id)?.outcome,
-          ),
+          claimMap.get(c.id)?.disposition
+            ? claimMap.get(c.id).disposition === "Spoke to person"
+            : ["Spoke to person", "Meeting booked", "Qualified"].includes(
+                claimMap.get(c.id)?.outcome,
+              ),
         ).length,
         outcomes,
       };

@@ -278,6 +278,47 @@ test("role and verified workflow regressions", async () => {
       assert.equal(row.zone, leadZone({ country }), country);
       assert.equal(row.phone, phone("3075550111", country), country);
     }
+    await db.exec("reset role");
+    await db.exec(
+      fs.readFileSync(
+        root +
+          "supabase/migrations/20261016161717_pipeline_people_profiles.sql",
+        "utf8",
+      ),
+    );
+    await identity(1);
+    let migrated = (
+      await db.query("select * from public.leads where id=$1", [lead.id])
+    ).rows[0];
+    assert.equal(migrated.stage, "Meeting Booked");
+    const moved = await rpc("change_leads", {
+      action: "stage",
+      stage: "Follow-up 1",
+      items: [{ id: lead.id, version: migrated.version }],
+    });
+    assert.equal(moved[0].stage_actor, "info@frontline-x.com");
+    assert.ok(moved[0].next_follow_up);
+    assert.equal(moved[0].next_action, "Call: Follow-up 1");
+    const next = await rpc("change_leads", {
+      action: "stage",
+      stage: "Follow-up 2",
+      items: [{ id: lead.id, version: moved[0].version }],
+    });
+    assert.equal(next[0].stage, "Follow-up 2");
+    await identity(2);
+    const profile = await rpc("save_profile", {
+      email: "info@frontline-x.com",
+      avatar_color: "#176b87",
+      avatar_image: "",
+      role: "Admin",
+    });
+    assert.equal(profile.email, "generator@frontline-x.com");
+    assert.equal(profile.role, "Agent");
+    assert.equal(profile.avatar_color, "#176b87");
+    await assert.rejects(
+      () => rpc("save_profile", { avatar_color: "red;bad", avatar_image: "" }),
+      /check constraint/,
+    );
     console.log(
       "PASS: handoff, capabilities, caller matching, cancel, outcomes, revocation, verified Gmail, sync leases, shared numbers, timezone boundaries",
     );
@@ -285,4 +326,3 @@ test("role and verified workflow regressions", async () => {
     await db.close();
   }
 });
-

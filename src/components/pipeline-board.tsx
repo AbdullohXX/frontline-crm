@@ -1,4 +1,5 @@
 "use client";
+import MemberIdentity from "./member-identity";
 import { useEffect, useRef, useState } from "react";
 import { STAGES, type Lead, type Member } from "@/lib/types";
 import { callingInfo } from "@/lib/workflow";
@@ -195,6 +196,7 @@ export default function PipelineBoard({
                 lane?.rows.map((lead) => (
                   <article
                     className="deal-card"
+                    data-priority={lead.priority}
                     key={lead.id}
                     aria-busy={busy.includes(lead.id)}
                     draggable={canMove && !busy.includes(lead.id)}
@@ -211,8 +213,20 @@ export default function PipelineBoard({
                     </button>
                     <p>{lead.contact || "Add a contact"}</p>
                     <small>
-                      {members.find((m) => m.email === lead.owner_email)
-                        ?.display_name || "Unassigned"}
+                      <MemberIdentity
+                        member={members.find(
+                          (m) =>
+                            m.email ===
+                            (lead.stage === "New"
+                              ? lead.created_by || lead.owner_email
+                              : lead.stage_actor),
+                        )}
+                        name={
+                          lead.stage !== "New" && !lead.stage_actor
+                            ? "Unassigned"
+                            : undefined
+                        }
+                      />
                     </small>
                     <p
                       className={
@@ -236,9 +250,8 @@ export default function PipelineBoard({
                     )}
                     <div className="card-meta">
                       <span
-                        className={
-                          lead.priority === "High" ? "priority" : "muted"
-                        }
+                        className="priority-badge"
+                        data-priority={lead.priority}
                       >
                         {lead.priority}
                       </span>
